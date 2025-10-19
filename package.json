@@ -1,0 +1,26 @@
+{
+  "name": "miraj-candles-workspace",
+  "version": "1.0.0",
+  "description": "Miraj Candles E-commerce Platform",
+  "private": true,
+  "scripts": {
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build:admin": "cd admin && npm run build",
+    "build": "npm run build:client",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install && cd ../admin && npm install",
+    "start:all": "concurrently \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:admin\"",
+    "dev": "npm run start:all"
+  },
+  "workspaces": [
+    "client",
+    "server",
+    "admin"
+  ],
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

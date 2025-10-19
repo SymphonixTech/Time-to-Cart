@@ -1,0 +1,81 @@
+You are building a modern e-commerce website using React (JSX/TSX) + TailwindCSS.
+
+The website has two main parts:
+1. User side (customers).
+2. Admin side (for the client to manage products).
+
+=========================
+🌐 USER SIDE FEATURES
+=========================
+- Home page: hero banner, featured products, categories.
+- Product listing page: grid of products with filters (category, price).
+- Product detail page: image gallery, description, price, add-to-cart button.
+- Cart page: show products, change quantity, remove item, total price.
+- Checkout page: basic form (name, address, phone).
+- Loading animations:
+  • Global loader (shopping cart/bag animation).
+  • Skeleton loaders for product grids and product details.
+- Transitions & animations:
+  • Smooth page transitions.
+  • Hover effects on product cards & buttons.
+  • Micro-interactions for add-to-cart.
+
+=========================
+🛠️ ADMIN SIDE FEATURES
+=========================
+- Login page (Firebase or Supabase Auth with email/password).
+- Dashboard: show total products, total orders, recent activity.
+- Product management (CRUD):
+  • Add new product (title, description, price, stock, category, image upload).
+  • Edit or delete products.
+  • Table view of products (with search + sort).
+- Orders management: list user orders, update status (Pending → Shipped → Delivered).
+- Settings page: update store name/logo and contact info.
+
+=========================
+📦 DATABASE MODELS
+=========================
+- Products: { id, title, description, price, stock, category, imageUrl, createdAt }
+- Orders: { id, userId, items[], total, status, createdAt }
+- Users: { id, name, email, role (user/admin) }
+
+=========================
+🎨 UI/UX REQUIREMENTS
+=========================
+- Design theme: white, gray, black (modern and minimal).
+- Use TailwindCSS + Heroicons.
+- Responsive layout (mobile to desktop).
+- Framer Motion for page transitions and component animations.
+- Include skeleton loaders and a global loading animation.
+- Clean, modern UI with proper spacing and typography.
+
+=========================
+🔒 CLIENT REQUIREMENTS
+=========================
+- Client is non-technical: must be able to log in, add/edit/delete products, upload images, and manage orders without touching code.
+- Database must properly store products and product images.
+- Admin routes must be protected (only logged-in admins can access).
+
+=========================
+📂 PROJECT STRUCTURE
+=========================
+src/
+  components/   → Navbar, Footer, ProductCard, Loader, Modal, Toast
+  pages/        → User pages
+  admin/        → Admin pages
+  context/      → Cart context
+  hooks/        → Custom hooks
+
+=========================
+📄 DELIVERABLES
+=========================
+1. Fully working React + Tailwind project.
+2. User part (shop with cart & checkout).
+3. Admin part (login, dashboard, CRUD for products, orders management).
+4. Database integration (Firebase Firestore + Storage OR Supabase).
+5. Documentation for client (markdown file explaining how to log in and use admin features).
+
+=========================
+⚡ FINAL INSTRUCTION
+=========================
+Generate a production-ready React (JSX/TSX) + Tailwind + Firebase/Supabase e-commerce website with all the above features, modern UI/UX, animations, transitions, and a loading animation suitable for selling websites.
