@@ -59,6 +59,11 @@ app.use(cors({
 
 app.use(express.json());
 
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err.message);
+  res.status(500).json({ error: "Internal server error" });
+});
+
 app.get('/', (req, res) => {
   res.send("Hello from backend!");
 });
