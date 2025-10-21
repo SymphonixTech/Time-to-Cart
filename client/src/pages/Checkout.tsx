@@ -21,6 +21,8 @@ const Checkout: React.FC = () => {
     zipCode: ''
   });
 
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   const API_URL = import.meta.env.VITE_API_URL;
 
   const generateQRCode = async () => {
@@ -149,6 +151,11 @@ const Checkout: React.FC = () => {
                   alt="UPI QR Code"
                   className="mx-auto w-60 h-60 border rounded-lg shadow-sm"
                 />
+                {isMobile ? (
+                  <a href={paymentData.upiLink} className="btn btn-primary">
+                    Pay Using UPI App
+                  </a>
+                )}
                 <p className="text-gray-600 text-sm">
                   Scan the QR using your UPI app and complete the payment.
                 </p>
