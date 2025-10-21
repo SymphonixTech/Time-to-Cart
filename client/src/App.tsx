@@ -47,6 +47,7 @@ import AdminProducts from './admin/AdminProducts';
 import AdminOrders from './admin/AdminOrders';
 import AdminSettings from './admin/AdminSettings';
 import ProtectedRoute from './admin/ProtectedRoute';
+import AdminLayout from './admin/AdminLayout';
 
 import './index.css';
 
@@ -89,37 +90,20 @@ const App: React.FC = () => {
 
                     {/* Admin Routes */}
                     <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route
-                      path="/admin/dashboard"
+                    <Route 
+                      path="/admin/*" 
                       element={
                         <ProtectedRoute>
-                          <AdminDashboard />
+                          <AdminLayout>
+                            <Routes>
+                              <Route path="/" element={<AdminDashboard />} />
+                              <Route path="/products" element={<AdminProducts />} />
+                              <Route path="/orders" element={<AdminOrders />} />
+                              <Route path="/settings" element={<AdminSettings />} />
+                            </Routes>
+                          </AdminLayout>
                         </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/products"
-                      element={
-                        <ProtectedRoute>
-                          <AdminProducts />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/orders"
-                      element={
-                        <ProtectedRoute>
-                          <AdminOrders />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/settings"
-                      element={
-                        <ProtectedRoute>
-                          <AdminSettings />
-                        </ProtectedRoute>
-                      }
+                      } 
                     />
                   </Routes>
                 </main>

@@ -1,14 +1,17 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from '../types';
+import { User as UserType } from '../types';
 import axios from 'axios';
+
+type User = {
+  uid: string;
+  email: string;
+  role: 'user' | 'admin';
+};
 
 interface AuthContextType {
   currentUser: User | null;
-  user: User | null;
-  adminLogin: (email: string, password: string) => Promise<void>;
-  adminRegister: (firstName: string, email: string, password: string) => Promise<void>;
-  adminLogout: () => Promise<void>;
-  loading: boolean;
+  login: (email: string, password: string) => Promise<User | null>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -18,19 +21,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const api = (import.meta as any).env.VITE_API_URL;
 
-  const adminLogin = async (email: string, password: string) => {
-    const res = await axios.post(`${api}/admin/login`, { email, password }, { withCredentials: true });
-    const user = res.data.user;
-    setCurrentUser(user);
-  }
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await axios.post(`${api}/admin/login`, 
+        { email, password },
+        { withCredentials: true }
+      );
+      const user = response.data.user;
+      setCurrentUser(user);
+      return user;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
 
-  const adminRegister = async (firstName: string, email: string, password: string) => {
-    const res = axios.post(`${api}/admin/register`, { name: firstName, email, password }, { withCredentials: true });
-    const user = (await res).data.user;
-    setCurrentUser(user);
-  }
-
-  const adminLogout = async () => {
+  const logout = async () => {
     await axios.get(`${api}/admin/logout`, { withCredentials: true });
     setCurrentUser(null);
   }
@@ -53,10 +59,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const value = {
     currentUser,
-    user: currentUser,
-    adminLogin,
-    adminRegister,
-    adminLogout,
+    login,
+    logout,
     loading
   };
 

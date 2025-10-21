@@ -299,25 +299,8 @@ const Home: React.FC = () => {
     transition: { duration: 0.5, delay: 0.2 }
   };
 
-  const product = {
-  imageUrl: "/images/candles/candle-collection-1.png",
-  name: "Vanilla Bliss Candle",
-  price: 19.99
-};
-
   return (
     <div className="min-h-screen">
-      <div className="fixed bottom-15 right-15 transform -translate-x-1/2 z-50 bg-white p-3 rounded-xl shadow-lg flex items-center space-x-3 border border-gray-200 hover:shadow-xl transition-all duration-300">
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="w-12 h-12 object-cover rounded-md border border-gray-200"
-        />
-        <div>
-          <h2 className="text-sm font-semibold text-gray-800">{product.name}</h2>
-          <p className="text-xs text-gray-500">${product.price}</p>
-        </div>
-        </div>
       <section className="bg-white py-8 relative overflow-hidden">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -904,19 +887,6 @@ export default Home;
 //       hasSubcategories: false
 //     }
 //   ];
-
-
-//   const cartVariants = {
-//     initial: { scale: 1, rotate: 0 },
-//     animate: { scale: [1, 1.2, 1.1, 1.2, 1], rotate: [0, 10, -10, 10, 0] },
-//     transition: { duration: 0.8, ease: "easeInOut" }
-//   };
-
-//   const coinVariants = {
-//     initial: { opacity: 0, y: 50, rotate: -45 },
-//     animate: { opacity: 1, y: 0, rotate: 0 },
-//     transition: { duration: 0.5, delay: 0.2 }
-//   };
 
 //   return (
 //     <div className="min-h-screen">

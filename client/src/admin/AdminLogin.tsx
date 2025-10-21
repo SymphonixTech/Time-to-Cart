@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -16,6 +15,7 @@ const AdminLogin: React.FC = () => {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
 
   // Redirect if already logged in as admin
   React.useEffect(() => {
@@ -34,10 +34,16 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
 
     try {
+      setError('');
       await login(formData.email, formData.password);
-      toast.success('Login successful!');
-      navigate('/admin/dashboard');
+      if (currentUser?.role === 'admin') {
+        toast.success('Login successful!');
+        navigate('/admin/dashboard');
+      } else {
+        setError('Unauthorized access');
+      }
     } catch (error: any) {
+      setError('Failed to login');
       console.error('Login error:', error);
       toast.error(error.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -63,6 +69,12 @@ const AdminLogin: React.FC = () => {
             Access the admin dashboard
           </p>
         </div>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
         <motion.form
           initial={{ opacity: 0, y: 20 }}
