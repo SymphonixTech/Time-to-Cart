@@ -1099,12 +1099,6 @@ app.put('/api/admin/verify-payment/:id', verifyAdmin, async (req, res) => {
   }
 });
 
-connectToDatabase()
-.then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server is running on the port ${PORT}`);
-    });
-})
-.catch((error) => {
-    console.log(error);
-});
+connectToDatabase().then(() => { console.log("MongoDB has connected successfully"); }).catch(err => { console.log("Error: ", err); });
+
+export default app;
