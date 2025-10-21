@@ -8,12 +8,10 @@ import User from './models/User.js';
 import cookieParser from "cookie-parser";
 import { verifyAdmin, verifyToken } from './middleware/auth.js';
 import { toDataURL } from 'qrcode';
-// const { default: User } = await import('./models/User.js');
 import { sendEmail } from './lib/mail.js';
 import multer from 'multer';
 import uploadToCloudinary, { deleteFromCloudinary } from './lib/uploadCloudinary.js';
 import Order from './models/Order.js';
-import { useTransition } from 'react';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
