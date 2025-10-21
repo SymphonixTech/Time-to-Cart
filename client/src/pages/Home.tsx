@@ -208,7 +208,7 @@ const Home: React.FC = () => {
 
 
           const bestsellersFiltered = products.filter(p => p.bestSeller === true);
-          setBestSellers(bestsellersFiltered.length > 0 ? bestsellersFiltered.slice(0, 4) : products.slice(4, 8));
+          setBestSellers(bestsellersFiltered.length > 0 ? bestsellersFiltered.slice(0, 4) : products.slice(0, 4));
         }
       } catch (error) {
         console.error('Error loading products:', error);
