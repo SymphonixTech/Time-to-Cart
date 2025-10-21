@@ -1005,9 +1005,9 @@ app.post('/api/payment', verifyToken, async (req, res) => {
     res.status(200).json({
       success: true,
       qrCode: qrImageUrl,
+      upiLink,
       upiId,
       name,
-      upiLink,
       totalAmount: amount,
     });
   } catch (error) {
