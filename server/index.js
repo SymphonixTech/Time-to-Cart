@@ -6,6 +6,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from './models/User.js';
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
+import xss from "xss-clean";
 import { verifyAdmin, verifyToken } from './middleware/auth.js';
 import { toDataURL } from 'qrcode';
 import { sendEmail } from './lib/mail.js';
@@ -20,10 +24,36 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: ["'self'", process.env.FRONTEND_URL, "https:"],
+        frameAncestors: ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again later.",
+});
+app.use(limiter);
+
+app.use(mongoSanitize());
+
+app.use(xss());
+
 app.use(cookieParser());
 
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, 'http://localhost:5000', 'http://localhost:5001', 'http://localhost:8000', 'https://*.replit.dev', 'https://*.repl.co'],
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
 
