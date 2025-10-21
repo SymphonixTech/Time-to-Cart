@@ -32,7 +32,7 @@ app.use(cors({
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Miraj Candles Server is running with MongoDB!' });
+  res.send("Hello from backend!");
 });
 
 app.post('/api/admin/register', async (req, res) => {
