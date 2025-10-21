@@ -11,7 +11,7 @@ const Checkout: React.FC = () => {
   const { state, clearCart } = useCart();
   const { setLoading } = useLoading();
   const navigate = useNavigate();
-  const [qrData, setQrData] = useState<{ qrCode: string; } | null>(null);
+  const [qrData, setQrData] = useState<{ qrCode: string; upiLink?: string } | null>(null);
   const [txnId, setTxnId] = useState('');
   const [hasGeneratedQR, setHasGeneratedQR] = useState(false);
   const [formData, setFormData] = useState({
@@ -46,7 +46,7 @@ const Checkout: React.FC = () => {
       });
 
       if (res.data?.success) {
-        setQrData({ qrCode: res.data.qrCode });
+        setQrData({ qrCode: res.data.qrCode, upiLink: res.data.upiLink });
         setHasGeneratedQR(true);
         toast.success('Scan the QR to complete payment');
       } else {
@@ -151,8 +151,11 @@ const Checkout: React.FC = () => {
                   alt="UPI QR Code"
                   className="mx-auto w-60 h-60 border rounded-lg shadow-sm"
                 />
-                {isMobile ? (
-                  <a href={paymentData.upiLink} className="btn btn-primary">
+                {isMobile && qrData?.upiLink && (
+                  <a
+                    href={qrData.upiLink}
+                    className="btn btn-primary w-full mt-4"
+                  >
                     Pay Using UPI App
                   </a>
                 )}
