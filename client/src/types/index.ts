@@ -1,3 +1,13 @@
+export interface User {
+  id: string;
+  _id: string;
+  name: string;
+  firstName: string;
+  email: string;
+  role: 'user' | 'admin';
+  profilePicture?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -9,7 +19,7 @@ export interface Product {
   images: [string];
   category: string;
   rating: number;
-  reviews: { userId: string; comment: string; rating: number; date: Date }[];
+  reviews: { userId: User; comment: string; rating: number; date: Date }[];
   stockQuantity: number;
   sales?: number;
   features?: string[];
@@ -57,15 +67,6 @@ export interface Order {
     phone: string;
   };
   createdAt: Date;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  firstName: string;
-  email: string;
-  role: 'user' | 'admin';
-  profilePicture?: string;
 }
 
 export interface StoreSettings {
