@@ -147,7 +147,7 @@ app.get('/api/admin/logout', async (req, res) => {
             sameSite: 'none',
             maxAge: 0
         };
-        return res.status(200).cookie('admin', '', options).json({message: 'User logged out successfully'});
+        return res.status(200).clearCookie('admin', options).json({message: 'User logged out successfully'});
     }
     catch(error) {
         return res.status(500).json({error: error.message});
@@ -251,7 +251,7 @@ app.get('/api/logout', async (req, res) => {
             sameSite: 'none',
             maxAge: 0
         };
-        return res.status(200).cookie('zxcsdasd', '', options).json({message: 'User logged out successfully'});
+        return res.status(200).clearCookie('zxcsdasd', options).json({message: 'User logged out successfully'});
     }
     catch(error) {
         return res.status(500).json({error: error.message});
