@@ -1,11 +1,39 @@
+export interface Address {
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+}
+
+export interface CartItem {
+  id: string;
+  product: string;
+  quantity: number;
+}
+
 export interface User {
   id: string;
   _id: string;
-  name: string;
-  firstName: string;
   email: string;
+  password: string;
+  name: string;
+  dateOfBirth?: Date;
+  gender?: 'male' | 'female' | 'other' | 'prefer not to say';
+  phone?: string;
+  address?: Address;
+  lastUpdate?: Date;
   role: 'user' | 'admin';
-  profilePicture?: string;
+  verifyOTP?: string | null;
+  isVerified: boolean;
+  verifyOTPExpiry?: Date | null;
+  verifyToken?: string | null;
+  verifyTokenExpiry?: Date | null;
+  subscription: boolean;
+  cart: CartItem[];
+  wishlist: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Product {
@@ -41,12 +69,6 @@ export interface Product {
   tags: string[];
   featured: boolean;
   bestSeller: boolean;
-}
-
-export interface CartItem {
-  id: string;
-  product: Product;
-  quantity: number;
 }
 
 export interface CartState {
