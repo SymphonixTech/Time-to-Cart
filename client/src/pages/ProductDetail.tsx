@@ -494,11 +494,15 @@ const ProductDetail: React.FC = () => {
                 {/* Individual Reviews */}
                 <div className="space-y-6">
                   {product.reviews.map((review:any) => (
-                    <div key={review.userId._id + '-' + Date.now()} className="border-b border-gray-100 pb-6">
+                    <div key={review.userId._id} className="border-b border-gray-100 pb-6">
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-600">
-                            {review.userId.name.split(' ').map(n => n[0]).join('')}
+                            {
+                              typeof review.userId?.name === 'string'
+                                ? review.userId.name.split(' ').map(n => n[0]).join('')
+                                : '??'
+                            }
                           </span>
                         </div>
                         <div className="flex-1">
