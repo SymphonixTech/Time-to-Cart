@@ -879,7 +879,8 @@ app.put('/api/orders/:id/delivery', verifyAdmin, async (req, res) => {
 app.get('/api/reviews/:productId', async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
-    const product = await Product.findById(req.params.productId).populate('reviews.userId', 'name');
+    const product = await Product.findById(req.params.productId).populate('reviews.userId');
+    const user = await User.findById(product.reviews.userId);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -932,7 +933,7 @@ app.post('/api/reviews/:productId', verifyToken, async (req, res) => {
 
     const newReview = {
       id: nextId,
-      userId: user.name,
+      userId: user._id,
       rating,
       comment,
       createdAt: new Date()
