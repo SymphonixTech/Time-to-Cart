@@ -59,11 +59,6 @@ app.use(cors({
 
 app.use(express.json());
 
-app.use((err, req, res, next) => {
-  console.error("Server Error:", err.message);
-  res.status(500).json({ error: "Internal server error" });
-});
-
 app.get('/', (req, res) => {
   res.send("Hello from backend!");
 });
@@ -348,7 +343,7 @@ app.put('/api/update-profile', verifyToken, async (req, res) => {
     };
     user.dateOfBirth = dateOfBirth || user.dateOfBirth;
     user.gender = gender || user.gender;
-    user.save();
+    await user.save();
     res.status(200).json({ message: 'Profile updated successfully', user });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -445,7 +440,7 @@ app.post('/api/contact', verifyToken, upload.array('files', 5), async (req, res)
       orderId: ord
     });
     contact.images = urls.filter(Boolean);
-    contact.save();
+    await contact.save();
     sendEmail({ email: user.email, emailType: 'QUERY', userId: req.user._id, message });
     const admin = await User.find({ role: "admin" });
     admin.forEach(async (a) => {
@@ -471,7 +466,7 @@ app.post('/api/contact/read', verifyAdmin, async (req, res) => {
     if(!contact) return res.status(404).json({ message: 'Contact not found' });
 
     contact.read = true;
-    contact.save();
+    await contact.save();
     res.status(200).json({ message: 'Contact marked as read' });
   }
   catch(error) {
@@ -487,7 +482,7 @@ app.post('/api/contact/response', verifyAdmin, async (req, res) => {
     if(!contact) return res.status(404).json({ message: 'Contact not found' });
     if(!contact.read) return res.status(400).json({ message: 'Contact not marked as read' });
     contact.response = true;
-    contact.save();
+    await contact.save();
     res.status(200).json({ message: 'Contact marked as responded' });
   }
   catch(error) {
@@ -680,30 +675,6 @@ app.delete('/api/admin/products/:id', verifyAdmin, async (req, res) => {
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete product' });
-  }
-});
-
-app.post('/api/cart', verifyToken, async (req, res) => {
-  try {
-    const { default: User } = await import('./models/User.js');
-    const user = await User.findById(req.user._id);
-    const { productId, quantity } = req.body;
-
-    const existingItem = user.cart.find(
-      item => item.product.toString() === productId
-    );
-
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      user.cart.push({ product: productId, quantity });
-    }
-
-    await user.save();
-    const populated = await user.populate('cart.product');
-    res.status(200).json(populated.cart);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update cart' });
   }
 });
 
@@ -949,7 +920,7 @@ app.post('/api/reviews/:productId', verifyToken, async (req, res) => {
     }
 
     const alreadyReviewed = product.reviews.some(
-      (r) => r.userId.toString() === user.name
+      (r) => r.userId._id.toString() === user._id.toString()
     );
     if (alreadyReviewed) {
       return res.status(400).json({ error: 'You have already reviewed this product.' });
@@ -1129,6 +1100,11 @@ app.put('/api/admin/verify-payment/:id', verifyAdmin, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to verify payment' });
   }
+});
+
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err.message);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 connectToDatabase().then(() => { console.log("MongoDB has connected successfully"); }).catch(err => { console.log("Error: ", err); });
