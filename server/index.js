@@ -562,7 +562,7 @@ app.get('/api/products', async (req, res) => {
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
-    let query = Product.find(filter);
+    let query = Product.find(filter).populate('reviews.userId');
     if (sortBy === 'price-low') query = query.sort({ price: 1 });
     else if (sortBy === 'price-high') query = query.sort({ price: -1 });
     else if (sortBy === 'name') query = query.sort({ name: 1 });
