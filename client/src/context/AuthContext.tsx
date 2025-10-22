@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // await mockAuth.signOut();
     await axios.get(`${api}/logout`, { withCredentials: true });
     setCurrentUser(null);
+    localStorage.removeItem('user');
   };
 
   const adminLogout = async () => {
