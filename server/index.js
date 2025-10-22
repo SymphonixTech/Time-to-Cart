@@ -577,7 +577,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('reviews.userId');
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
