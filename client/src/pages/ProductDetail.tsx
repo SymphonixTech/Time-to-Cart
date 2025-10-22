@@ -494,16 +494,16 @@ const ProductDetail: React.FC = () => {
                 {/* Individual Reviews */}
                 <div className="space-y-6">
                   {product.reviews.map((review:any) => (
-                    <div key={review.userId + '-' + Date.now()} className="border-b border-gray-100 pb-6">
+                    <div key={review.userId._id + '-' + Date.now()} className="border-b border-gray-100 pb-6">
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-600">
-                            {review.userId.split(' ').map(n => n[0]).join('')}
+                            {review.userId.name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="font-medium text-gray-900">{review.userId}</span>
+                            <span className="font-medium text-gray-900">{review.userId.name}</span>
                           </div>
                           <div className="flex items-center gap-2 mb-2">
                             <div className="flex">{renderStars(review.rating, 'w-4 h-4')}</div>
