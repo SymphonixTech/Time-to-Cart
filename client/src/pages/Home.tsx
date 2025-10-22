@@ -565,8 +565,18 @@ const Home: React.FC = () => {
                     className="w-12 h-12 rounded-full mr-4 object-cover"
                   />
                   <div>
-                    <h4 className="font-semibold text-gray-900">{client.userId}</h4>
-                    <p className="text-sm text-gray-600">{testimonials[client.id - 1].location}</p>
+                    <h4 className="font-semibold text-gray-900">{client.userId.name}</h4>
+                    <p className="text-sm text-gray-600">{client.userId.address
+                      ? [
+                          client.userId.address.street,
+                          client.userId.address.city,
+                          client.userId.address.state,
+                          client.userId.address.country
+                        ]
+                          .filter(Boolean)
+                          .join(', ')
+                      : testimonials[client.id - 1].location
+                    }</p>
                   </div>
                 </div>
 
