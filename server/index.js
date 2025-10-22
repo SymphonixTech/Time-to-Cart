@@ -123,7 +123,8 @@ app.post('/api/admin/login', async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: 'none'
+            sameSite: 'none',
+            path: '/'
         };
         return res.status(200).cookie('admin', token, options).json({user, message: "User logged in successfully"});
     }
@@ -139,7 +140,8 @@ app.get('/api/admin/logout', async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: 'none'
+            sameSite: 'none',
+            path: '/'
         };
         return res.status(200).clearCookie('admin', options).json({message: 'User logged out successfully'});
     }
@@ -185,7 +187,8 @@ app.post('/api/login', async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: 'none'
+            sameSite: 'none',
+            path: '/'
         };
         return res.status(200).cookie('zxcsdasd', token, options).json({user: tokenData, message: "User logged in successfully"});
     }
@@ -242,7 +245,8 @@ app.get('/api/logout', async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: 'none'
+            sameSite: 'none',
+            path: '/'
         };
         return res.status(200).clearCookie('zxcsdasd', options).json({message: 'User logged out successfully'});
     }
