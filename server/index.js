@@ -144,8 +144,7 @@ app.get('/api/admin/logout', async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
-            maxAge: 0
+            sameSite: 'none'
         };
         return res.status(200).clearCookie('admin', options).json({message: 'User logged out successfully'});
     }
@@ -248,8 +247,7 @@ app.get('/api/logout', async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
-            maxAge: 0
+            sameSite: 'none'
         };
         return res.status(200).clearCookie('zxcsdasd', options).json({message: 'User logged out successfully'});
     }
