@@ -54,7 +54,11 @@ const ProductSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-    userId: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
     rating: Number,
     comment: String,
     createdAt: { type: Date, default: Date.now }
