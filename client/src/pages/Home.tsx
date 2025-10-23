@@ -301,101 +301,135 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <section className="bg-white py-8 relative overflow-hidden">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={currentSlide}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.6, ease: "easeInOut" }}
-        className="grid lg:grid-cols-2 gap-8 items-center"
-      >
-        {/* LEFT SIDE → Text */}
-        <div className="space-y-6">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
+      <section className="relative overflow-hidden pt-28 pb-16 bg-gradient-to-b from-[#fff] to-white">
+        {/* Floating Product Preview Bar */}
+        <div className="absolute top-5 left-0 w-full z-40 flex justify-center px-4">
+          <div
+            className="
+              bg-transparent p-3 rounded-xl shadow-lg flex items-center justify-start space-x-4
+              border hover:shadow-xl transition-all duration-300
+              max-w-5xl mx-auto
+              overflow-x-auto sm:overflow-visible
+              scrollbar-hide
+            "
           >
-            {/* Discount Badge */}
-            <div className="bg-orange-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-lg shadow-lg">
-              {heroSlides[currentSlide].discount}
+            <div className="pl-3 flex space-x-4">
+              {[
+                {
+                  images: ["/images/candles/candle-collection-1.png"],
+                  name: "Vanilla Bliss Candle",
+                  price: 19.99,
+                },
+                {
+                  images: ["/images/candles/candle-collection-2.png"],
+                  name: "Citrus Glow Candle",
+                  price: 14.99,
+                },
+                {
+                  images: ["/images/candles/candle-collection-3.png"],
+                  name: "Lavender Serenity Candle",
+                  price: 17.49,
+                },
+                {
+                  images: ["/images/candles/candle-collection-4.png"],
+                  name: "Coconut Dream Candle",
+                  price: 15.99,
+                },
+              ].map((product, index) => (
+                <div
+                  key={index}
+                  className="flex-shrink-0 flex items-center space-x-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-12 h-12 object-cover rounded-md border border-gray-200"
+                  />
+                  <Link to="/contact" className="block">
+                    <span className="text-sm font-semibold text-gray-800">
+                      {product.name}
+                    </span>
+                    <p className="text-xs text-gray-500">₹{product.price}</p>
+                  </Link>
+                </div>
+              ))}
             </div>
-
-            {/* Title + Subtitle */}
-            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-4">
-              {heroSlides[currentSlide].mainTitle}
-              <br />
-              <span className="text-2xl lg:text-3xl text-gray-600 font-normal">
-                {heroSlides[currentSlide].subtitle}
-              </span>
-            </h1>
-          </motion.div>
-
-          {/* Description */}
-          <motion.p
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-lg text-gray-600 leading-relaxed"
-          >
-            {heroSlides[currentSlide].description}
-          </motion.p>
-
-          {/* Button */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Link
-              to={heroSlides[currentSlide].link}
-              className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-              {heroSlides[currentSlide].buttonText}
-              <ArrowRightIcon className="w-5 h-5 ml-2" />
-            </Link>
-          </motion.div>
+          </div>
         </div>
-
-        {/* RIGHT SIDE → Image */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="relative"
-        >
-          <img
-            src={heroSlides[currentSlide].mainImage}
-            alt={heroSlides[currentSlide].mainTitle}
-            className="w-full h-96 object-cover rounded-2xl shadow-lg"
-          />
-          <button className="absolute top-4 right-4 bg-white rounded-full p-2 shadow hover:shadow-md">
-            <HeartIcon className="w-6 h-6 text-gray-700" />
-          </button>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-
-    {/* Slide Indicators (unchanged) */}
-    <div className="flex justify-center mt-8 space-x-2">
-      {heroSlides.map((_, index) => (
-        <button
-          key={index}
-          onClick={() => setCurrentSlide(index)}
-          className={`w-3 h-3 transition-all duration-300 ${
-            currentSlide === index
-              ? "bg-green-600 rounded-sm"
-              : "bg-gray-300 hover:bg-gray-400 rounded-sm"
-          }`}
-        />
-      ))}
-    </div>
-  </div>
-</section>
+      
+        {/* ✅ Hero container (spaced better + soft background) */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center mt-12">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+              className="grid lg:grid-cols-2 gap-8 items-center mt-10"
+            >
+              {/* LEFT TEXT */}
+              <div className="space-y-6">
+                <div className="bg-orange-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-lg shadow-lg">
+                  {heroSlides[currentSlide].discount}
+                </div>
+      
+                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-4">
+                  {heroSlides[currentSlide].mainTitle}
+                  <br />
+                  <span className="text-2xl lg:text-3xl text-gray-600 font-normal">
+                    {heroSlides[currentSlide].subtitle}
+                  </span>
+                </h1>
+      
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  {heroSlides[currentSlide].description}
+                </p>
+      
+                <Link
+                  to={heroSlides[currentSlide].link}
+                  className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  {heroSlides[currentSlide].buttonText}
+                  <ArrowRightIcon className="w-5 h-5 ml-2" />
+                </Link>
+              </div>
+      
+              {/* RIGHT IMAGE */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative flex justify-center items-center mt-10"
+              >
+                <img
+                  src={heroSlides[currentSlide].mainImage}
+                  alt={heroSlides[currentSlide].mainTitle}
+                  className="w-4/5 h-80 object-cover rounded-2xl shadow-lg"
+                />
+                <button className="absolute top-6 right-12 bg-white rounded-full p-2 shadow hover:shadow-md">
+                  <HeartIcon className="w-6 h-6 text-gray-700" />
+                </button>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
+      
+          {/* Dots Indicator */}
+          <div className="flex justify-center mt-10 space-x-2">
+            {heroSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 transition-all duration-300 ${
+                  currentSlide === index
+                    ? 'bg-green-600 rounded-sm'
+                    : 'bg-gray-300 hover:bg-gray-400 rounded-sm'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Choose Your Category Section */}
       <section className="py-16 bg-white">
