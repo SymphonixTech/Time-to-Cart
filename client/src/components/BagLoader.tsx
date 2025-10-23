@@ -55,7 +55,7 @@ const BagLoader: React.FC<BagLoaderProps> = ({
                 ease: "easeInOut"
               }}
             >
-              <span className="text-green-600 font-bold text-2xl">$</span>
+              <span className="text-green-600 font-bold text-2xl">₹</span>
             </motion.div>
 
             {/* Floating coins */}
