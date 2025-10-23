@@ -201,7 +201,7 @@ const Checkout: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full btn-primary py-4 text-lg font-medium"
+                  className="w-full btn-primary py-4 text-lg font-medium flex items-center justify-center"
                 >
                   <CreditCardIcon className="w-6 h-6 mr-2" />
                   Place Order
