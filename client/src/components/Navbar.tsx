@@ -23,6 +23,7 @@ const Navbar: React.FC = () => {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const { state } = useCart();
   const { state: wishlistState } = useWishlist();
   const { currentUser, logout } = useAuth();
@@ -30,59 +31,48 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Load all products (optional prefetch)
+  // Load products from API
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
-        setSearchResults(res.data);
+        setAllProducts(res.data);
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error loading products for search:', error);
       }
     };
     loadProducts();
   }, []);
 
-  // Fetch filtered products when user types
+  // Filter products for search
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setShowSearchDropdown(false);
-      return;
-    }
-
-    const delayDebounce = setTimeout(async () => {
+    if (!searchQuery.trim()) return;
+    const filterProduct = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/products/search?q=${encodeURIComponent(searchQuery)}`
-        );
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/products/search?q=${searchQuery}`);
         setSearchResults(res.data);
         setShowSearchDropdown(res.data.length > 0);
       } catch (error) {
-        console.error('Error searching products:', error);
+        console.error('Error loading products for search:', error);
       }
-    }, 300); // debounce for smoother UX
-
-    return () => clearTimeout(delayDebounce);
+    };
+    filterProduct();
   }, [searchQuery]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
+
       if (searchRef.current && !searchRef.current.contains(target)) {
         setShowSearchDropdown(false);
       }
-
       if (showProfileDropdown) {
         const profileButton = document.querySelector('[data-profile-button]');
         const profileDropdown = document.querySelector('[data-profile-dropdown]');
-        if (
-          profileButton &&
-          profileDropdown &&
-          !profileButton.contains(target) &&
-          !profileDropdown.contains(target)
-        ) {
+        if (profileButton && profileDropdown &&
+            !profileButton.contains(target) &&
+            !profileDropdown.contains(target)) {
           setShowProfileDropdown(false);
         }
       }
@@ -97,7 +87,7 @@ const Navbar: React.FC = () => {
       await logout();
       toast.success('Logged out successfully');
       navigate('/');
-    } catch {
+    } catch (error) {
       toast.error('Failed to logout');
     }
   };
@@ -123,10 +113,11 @@ const Navbar: React.FC = () => {
     { name: 'Contact', href: '/contact' },
   ];
 
-  const isActive = (path: string) =>
-    path === '/'
-      ? location.pathname === '/'
-      : location.pathname.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === '/' && location.pathname === '/') return true;
+    if (path !== '/' && location.pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
@@ -155,26 +146,17 @@ const Navbar: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`relative px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'text-orange-600 bg-orange-50'
-                    : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
-                }`}
+                className={`relative px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive(item.href)
+                  ? 'text-orange-600 bg-orange-50'
+                  : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
+                  }`}
               >
                 {item.name}
-                {isActive(item.href) && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600"
-                    initial={false}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  />
-                )}
               </Link>
             ))}
           </div>
 
-          {/* Search Bar - Desktop */}
+          {/* Search */}
           <div className="hidden md:flex flex-1 max-w-lg mx-8" ref={searchRef}>
             <form onSubmit={handleSearch} className="relative w-full">
               <input
@@ -184,36 +166,24 @@ const Navbar: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-4 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200"
               />
-              <button
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200"
-              >
+              <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200">
                 <MagnifyingGlassIcon className="w-5 h-5" />
               </button>
 
-              {/* Search Dropdown */}
               {showSearchDropdown && searchResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-96 overflow-y-auto z-50">
-                  {searchResults.map((product) => (
-                    <div
-                      key={product._id}
-                      onClick={() => handleProductClick(product._id)}
-                      className="flex items-center p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                    >
+                  {searchResults.map(product => (
+                    <div key={product._id} onClick={() => handleProductClick(product._id)} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
                       <img
                         src={product.images?.[0] || '/images/candles/candle-collection-1.png'}
                         alt={product.name || 'Product'}
                         className="w-12 h-12 object-cover rounded-lg mr-3"
-                        onError={(e) => {
-                          e.currentTarget.src = '/images/candles/candle-collection-1.png';
-                        }}
+                        onError={(e) => e.currentTarget.src = '/images/candles/candle-collection-1.png'}
                       />
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">{product.name}</h4>
+                        <h4 className="text-sm font-medium text-gray-900">{product.name || 'Unknown Product'}</h4>
                         <p className="text-xs text-gray-500">{product.category || 'Uncategorized'}</p>
-                        <p className="text-sm font-semibold text-orange-600">
-                          ${product.price?.toFixed(2) || '0.00'}
-                        </p>
+                        <p className="text-sm font-semibold text-orange-600">${product.price?.toFixed(2) || '0.00'}</p>
                       </div>
                     </div>
                   ))}
@@ -222,25 +192,11 @@ const Navbar: React.FC = () => {
             </form>
           </div>
 
-          {/* Right side - Desktop */}
+          {/* Right side */}
           <div className="hidden md:flex items-center space-x-2">
-            {/* Wishlist */}
-            <Link
-              to="/wishlist"
-              className="relative p-3 group rounded-xl hover:bg-red-50 transition-all duration-300 hover:shadow-lg"
-            >
-              <svg
-                className="w-6 h-6 text-gray-600 group-hover:text-red-500 transition-colors duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
+            <Link to="/wishlist" className="relative p-3 group rounded-xl hover:bg-red-50 transition-all duration-300 hover:shadow-lg">
+              <svg className="w-6 h-6 text-gray-600 group-hover:text-red-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               {wishlistState.items.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-medium">
@@ -249,11 +205,7 @@ const Navbar: React.FC = () => {
               )}
             </Link>
 
-            {/* Cart */}
-            <Link
-              to="/cart"
-              className="relative p-3 group rounded-xl hover:bg-orange-50 transition-all duration-300 hover:shadow-lg"
-            >
+            <Link to="/cart" className="relative p-3 group rounded-xl hover:bg-orange-50 transition-all duration-300 hover:shadow-lg">
               <ShoppingBagIcon className="w-6 h-6 text-gray-600 group-hover:text-orange-500 transition-colors duration-300" />
               {state.items.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-medium">
@@ -262,53 +214,129 @@ const Navbar: React.FC = () => {
               )}
             </Link>
 
-            {/* User */}
+            {/* Profile dropdown */}
             {currentUser ? (
-              /* Profile Dropdown logic (same as before)... */
-              <div>{/* omitted for brevity, same as your working dropdown */}</div>
+              <div className="relative">
+                <button
+                  data-profile-button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-all duration-300 group"
+                >
+                  <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {currentUser.profilePicture ? (
+                      <img src={currentUser.profilePicture} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <UserIcon className="h-4 w-4 text-gray-600" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 hidden lg:block">{currentUser.name || 'User'}</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <AnimatePresence>
+                  {showProfileDropdown && (
+                    <motion.div
+                      data-profile-dropdown
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50"
+                    >
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                            {currentUser.profilePicture ? (
+                              <img src={currentUser.profilePicture} alt="Profile" className="h-full w-full object-cover" />
+                            ) : <UserIcon className="h-6 w-6 text-gray-600" />}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{currentUser.name || 'User'}</p>
+                            <p className="text-sm text-gray-600">{currentUser.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-2">
+                        <Link
+                          to="/user/dashboard"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <UserIcon className="h-5 w-5 mr-3 text-gray-400" />
+                          My Dashboard
+                        </Link>
+
+                        <Link
+                          to="/cart"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <ShoppingBagIcon className="h-5 w-5 mr-3 text-gray-400" />
+                          My Cart ({state.items.length})
+                        </Link>
+
+                        <Link
+                          to="/wishlist"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <svg className="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                          My Wishlist ({wishlistState.items.length})
+                        </Link>
+
+                        {currentUser.role === 'admin' && (
+                          <Link
+                            to="/admin/dashboard"
+                            onClick={() => setShowProfileDropdown(false)}
+                            className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                          >
+                            <CogIcon className="h-5 w-5 mr-3 text-gray-400" />
+                            Admin Dashboard
+                          </Link>
+                        )}
+
+                        <div className="border-t border-gray-100 mt-2 pt-2">
+                          <button
+                            onClick={() => { handleLogout(); setShowProfileDropdown(false); }}
+                            className="flex items-center w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <svg className="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ) : (
-              <button
-                onClick={() => setShowLoginModal(true)}
-                className="p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 hover:shadow-lg group"
-              >
+              <button onClick={() => setShowLoginModal(true)} className="p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 hover:shadow-lg group">
                 <UserIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-500 transition-colors duration-300" />
               </button>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-            onClick={() => setIsOpen(!isOpen)}
-          >
+          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Mobile Search Bar */}
-        <div className="md:hidden pb-4">
-          <form onSubmit={handleSearch} className="relative">
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-4 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50"
-            />
-            <button
-              type="submit"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200"
-            >
-              <MagnifyingGlassIcon className="w-5 h-5" />
-            </button>
-          </form>
-        </div>
+        {/* Mobile Search + Mobile Nav etc. ... */}
+        {/* Keep your newer code for mobile nav + search + login modal */}
       </div>
     </nav>
   );
 };
 
 export default Navbar;
+
 
 
 
