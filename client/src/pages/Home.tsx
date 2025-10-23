@@ -134,7 +134,7 @@ const Home: React.FC = () => {
       description: "Experience the finest natural ingredients in every candle!",
       discount: "30%",
       buttonText: "Shop Now",
-      link: "/products",
+      link: "/sale",
       mainImage: "/images/candles/candle-collection-3.png",
       promoCards: [
         {
@@ -407,7 +407,7 @@ const Home: React.FC = () => {
                   alt={heroSlides[currentSlide].mainTitle}
                   className="w-4/5 h-80 object-cover rounded-2xl shadow-lg"
                 />
-                <button className="absolute top-6 right-12 bg-white rounded-full p-2 shadow hover:shadow-md">
+                <button className="absolute top-4 right-12 bg-white rounded-full p-2 shadow hover:shadow-md">
                   <HeartIcon className="w-6 h-6 text-gray-700" />
                 </button>
               </motion.div>
