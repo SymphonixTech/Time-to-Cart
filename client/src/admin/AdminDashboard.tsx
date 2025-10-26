@@ -35,7 +35,7 @@ const AdminDashboard: React.FC = () => {
   const [productChange, setProductChange] = useState(0);
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`, {withCredentials: true});
       const prods = res.data;
       setProducts(prods);
     } catch (error:any) {
@@ -45,7 +45,7 @@ const AdminDashboard: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders`, {withCredentials: true});
       const ords = res.data;
       const sortedOrders = ords.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       const recent = sortedOrders.slice(0, 5);
