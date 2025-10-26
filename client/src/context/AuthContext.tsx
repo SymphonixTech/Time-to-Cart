@@ -90,43 +90,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // ---------- FETCH AUTH STATUS ---------- //
-
   useEffect(() => {
-    // Restore user from localStorage immediately to avoid flicker
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
-
     const fetchAuthStatus = async () => {
       try {
-        console.log("Hi1");
-        let res = await axios.get(`${api}/isLoggedin`, { withCredentials: true });
-        console.log("Hi2");
-        console.log(res.data.user);
-        if (!res.data?.user) {
+        let res;
+        try {
+          res = await axios.get(`${api}/isLoggedin`, { withCredentials: true });
+        } catch (userErr) {
           res = await axios.get(`${api}/admin/isLoggedin`, { withCredentials: true });
         }
-        console.log(res.data.user);
 
         if (res.data?.user) {
           saveUser(res.data.user);
         } else {
           saveUser(null);
         }
+  
       } catch (error) {
-        console.error('Auth status error:', error);
+        console.error("Auth status final error:", error);
         saveUser(null);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchAuthStatus();
   }, [api]);
-
-  // ---------- CONTEXT VALUE ---------- //
 
   const value: AuthContextType = {
     currentUser,
