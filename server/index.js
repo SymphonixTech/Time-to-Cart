@@ -24,6 +24,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}));
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -39,25 +44,20 @@ app.use(
   })
 );
 
+app.use(mongoSanitize());
+app.use(xss());
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests from this IP, please try again later.",
 });
 app.use(limiter);
-
-app.use(mongoSanitize());
-
-app.use(xss());
-
-app.use(cookieParser());
-
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
-}));
-
-app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send("Hello from backend!");
