@@ -19,7 +19,9 @@ const AdminLogin: React.FC = () => {
 
   // Redirect if already logged in as admin
   React.useEffect(() => {
+    console.log(currentUser);
     if (currentUser && currentUser.role === 'admin') {
+      console.log(currentUser.role);
       navigate('/admin/dashboard', { replace: true });
     }
   }, [currentUser, navigate]);
