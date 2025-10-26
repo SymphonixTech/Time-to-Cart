@@ -7,7 +7,7 @@ import { useLoading } from '../context/LoadingContext';
 import toast from 'react-hot-toast';
 
 const AdminLogin: React.FC = () => {
-  const { adminLogin, currentUser } = useAuth();
+  const { loading, adminLogin, currentUser } = useAuth();
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -17,14 +17,11 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect if already logged in as admin
   React.useEffect(() => {
-    console.log(currentUser);
-    if (currentUser && currentUser.role === 'admin') {
-      console.log(currentUser.role);
+    if (!loading && currentUser?.role === 'admin') {
       navigate('/admin/dashboard', { replace: true });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, loading, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
