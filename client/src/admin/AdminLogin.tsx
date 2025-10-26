@@ -19,7 +19,7 @@ const AdminLogin: React.FC = () => {
 
   React.useEffect(() => {
     if (!loading && currentUser?.role === 'admin') {
-      navigate('/admin/dashboard', { replace: true });
+      navigate('/admin', { replace: true });
     }
   }, [currentUser, loading, navigate]);
 
@@ -37,7 +37,7 @@ const AdminLogin: React.FC = () => {
       await adminLogin(formData.email, formData.password);
       if (currentUser?.role === 'admin') {
         toast.success('Login successful!');
-        navigate('/admin/dashboard');
+        navigate('/admin');
       } else {
         setError('Unauthorized access');
       }
