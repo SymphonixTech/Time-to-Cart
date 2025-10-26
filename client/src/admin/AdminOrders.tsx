@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { EyeIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -7,83 +6,10 @@ import { db } from '../lib/firebase';
 import { Order } from '../types';
 import AdminLayout from './AdminLayout';
 import toast from 'react-hot-toast';
-
-// Sample orders data for fallback
-const sampleOrders: Order[] = [
-  {
-    id: 'ORD001',
-    userId: 'user1',
-    items: [],
-    total: 89.99,
-    status: 'pending',
-    customerInfo: {
-      name: 'John Smith',
-      email: 'john.smith@email.com',
-      address: '123 Main St, New York, NY 10001',
-      phone: '+1 (555) 123-4567'
-    },
-    createdAt: new Date('2025-01-10')
-  },
-  {
-    id: 'ORD002',
-    userId: 'user2', 
-    items: [],
-    total: 156.50,
-    status: 'shipped',
-    customerInfo: {
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      address: '456 Oak Ave, Los Angeles, CA 90210',
-      phone: '+1 (555) 987-6543'
-    },
-    createdAt: new Date('2025-01-09')
-  },
-  {
-    id: 'ORD003',
-    userId: 'user3',
-    items: [],
-    total: 234.75,
-    status: 'shipped',
-    customerInfo: {
-      name: 'Michael Chen',
-      email: 'michael.chen@email.com',
-      address: '789 Pine St, Chicago, IL 60601', 
-      phone: '+1 (555) 456-7890'
-    },
-    createdAt: new Date('2025-01-08')
-  },
-  {
-    id: 'ORD004',
-    userId: 'user4',
-    items: [],
-    total: 67.25,
-    status: 'delivered',
-    customerInfo: {
-      name: 'Emily Davis',
-      email: 'emily.davis@email.com',
-      address: '321 Elm Dr, Miami, FL 33101',
-      phone: '+1 (555) 234-5678'
-    },
-    createdAt: new Date('2025-01-07')
-  },
-  {
-    id: 'ORD005',
-    userId: 'user5',
-    items: [],
-    total: 178.90,
-    status: 'pending',
-    customerInfo: {
-      name: 'David Wilson',
-      email: 'david.wilson@email.com',
-      address: '654 Maple Ln, Seattle, WA 98101',
-      phone: '+1 (555) 345-6789'
-    },
-    createdAt: new Date('2025-01-06')
-  }
-];
+import axios from 'axios';
 
 const AdminOrders: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
 
@@ -94,20 +20,12 @@ const AdminOrders: React.FC = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const ordersData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      })) as Order[];
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders`, { withCredentials: true });
+      const ordersData = res.data;
       setOrders(ordersData);
       toast.success('Orders loaded successfully');
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      console.log('Using sample orders data as fallback');
-      setOrders(sampleOrders);
-      toast.success('Loaded sample orders for demonstration');
+      toast.error('Error while fetching orders');
     } finally {
       setLoading(false);
     }
@@ -115,13 +33,12 @@ const AdminOrders: React.FC = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      await updateDoc(doc(db, 'orders', orderId), { status });
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/orders/${orderId}/status`, { status }, { withCredentials: true });
       setOrders(orders.map(order => 
-        order.id === orderId ? { ...order, status } : order
+        order._id === orderId ? { ...order, status } : order
       ));
       toast.success(`Order ${status} successfully`);
     } catch (error) {
-      console.error('Error updating order:', error);
       toast.error('Failed to update order');
     }
   };
@@ -146,8 +63,6 @@ const AdminOrders: React.FC = () => {
   const filteredOrders = orders.filter(order => 
     filter === 'all' || order.status === filter
   );
-
-  
 
   return (
     <AdminLayout>
@@ -194,6 +109,9 @@ const AdminOrders: React.FC = () => {
                     Customer
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -209,19 +127,22 @@ const AdminOrders: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOrders.map((order) => (
-                  <tr key={order.id}>
+                  <tr key={order._id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{order.id.slice(-8)}
+                      {"ORD-" + order._id.toString().slice(-6).toUpperCase()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.customerInfo?.name}</div>
-                      <div className="text-sm text-gray-500">{order.customerInfo?.email}</div>
+                      <div className="text-sm text-gray-900">{order.userId?.name}</div>
+                      <div className="text-sm text-gray-500">{order.userId?.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {order.userId?.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {order.createdAt.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.total.toFixed(2)}
+                      ₹{order.totalAmount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
@@ -235,7 +156,7 @@ const AdminOrders: React.FC = () => {
                         </button>
                         {order.status === 'pending' && (
                           <button
-                            onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                            onClick={() => updateOrderStatus(order._id, 'confirmed')}
                             className="text-green-600 hover:text-green-900"
                           >
                             <CheckIcon className="w-4 h-4" />
@@ -243,7 +164,7 @@ const AdminOrders: React.FC = () => {
                         )}
                         {order.status !== 'cancelled' && order.status !== 'delivered' && (
                           <button
-                            onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                            onClick={() => updateOrderStatus(order._id, 'cancelled')}
                             className="text-red-600 hover:text-red-900"
                           >
                             <XMarkIcon className="w-4 h-4" />
