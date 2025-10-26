@@ -101,7 +101,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const fetchAuthStatus = async () => {
       try {
+        console.log("Hi1");
         let res = await axios.get(`${api}/isLoggedin`, { withCredentials: true });
+        console.log("Hi2");
         console.log(res.data.user);
         if (!res.data?.user) {
           res = await axios.get(`${api}/admin/isLoggedin`, { withCredentials: true });
