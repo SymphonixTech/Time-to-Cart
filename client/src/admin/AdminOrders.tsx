@@ -33,7 +33,7 @@ const AdminOrders: React.FC = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/orders/${orderId}/status`, { status }, { withCredentials: true });
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/orders/${orderId}/status`, { status }, { withCredentials: true });
       setOrders(orders.map(order => 
         order._id === orderId ? { ...order, status } : order
       ));
@@ -139,7 +139,7 @@ const AdminOrders: React.FC = () => {
                       {order.userId?.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.createdAt.toLocaleDateString()}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ₹{order.totalAmount.toFixed(2)}
