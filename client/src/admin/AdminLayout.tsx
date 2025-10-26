@@ -19,7 +19,7 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { logout, user, currentUser } = useAuth();
+  const { adminLogout, user, currentUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -33,7 +33,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await adminLogout();
       toast.success('Logged out successfully');
       navigate('/admin/login');
     } catch (error) {
