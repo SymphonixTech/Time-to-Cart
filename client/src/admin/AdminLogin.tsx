@@ -7,7 +7,7 @@ import { useLoading } from '../context/LoadingContext';
 import toast from 'react-hot-toast';
 
 const AdminLogin: React.FC = () => {
-  const { login, currentUser } = useAuth();
+  const { adminLogin, currentUser } = useAuth();
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -35,7 +35,7 @@ const AdminLogin: React.FC = () => {
 
     try {
       setError('');
-      await login(formData.email, formData.password);
+      await adminLogin(formData.email, formData.password);
       if (currentUser?.role === 'admin') {
         toast.success('Login successful!');
         navigate('/admin/dashboard');
