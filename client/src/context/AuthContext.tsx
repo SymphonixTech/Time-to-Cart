@@ -21,42 +21,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const api = import.meta.env.VITE_API_URL;
 
-  const login = async (email: string, password: string) => {
-    const res = await axios.post(`${api}/login`, { email, password }, { withCredentials: true });
-    const user = res.data.user;
+  // Helper: Save or clear user from both state & localStorage
+  const saveUser = (user: User | null) => {
     setCurrentUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    else localStorage.removeItem('user');
+  };
+
+  // ---------- AUTH ACTIONS ---------- //
+
+  const login = async (email: string, password: string) => {
+    try {
+      const res = await axios.post(`${api}/login`, { email, password }, { withCredentials: true });
+      saveUser(res.data.user);
+    } catch (err: any) {
+      console.error('Login error:', err);
+      throw err;
+    }
   };
 
   const adminLogin = async (email: string, password: string) => {
-    const res = await axios.post(`${api}/admin/login`, { email, password }, { withCredentials: true });
-    const user = res.data.user;
-    setCurrentUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    try {
+      const res = await axios.post(`${api}/admin/login`, { email, password }, { withCredentials: true });
+      saveUser(res.data.user);
+    } catch (err: any) {
+      console.error('Admin login error:', err);
+      throw err;
+    }
   };
 
   const register = async (firstName: string, phone: string, email: string, password: string) => {
-    const res = await axios.post(`${api}/register`, { name: firstName, phone, email, password }, { withCredentials: true });
-    const user = res.data.user;
-    setCurrentUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    try {
+      const res = await axios.post(`${api}/register`, { name: firstName, phone, email, password }, { withCredentials: true });
+      saveUser(res.data.user);
+    } catch (err: any) {
+      console.error('Register error:', err);
+      throw err;
+    }
   };
 
   const adminRegister = async (firstName: string, email: string, password: string) => {
-    const res = await axios.post(`${api}/admin/register`, { name: firstName, email, password }, { withCredentials: true });
-    const user = res.data.user;
-    setCurrentUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    try {
+      const res = await axios.post(`${api}/admin/register`, { name: firstName, email, password }, { withCredentials: true });
+      saveUser(res.data.user);
+    } catch (err: any) {
+      console.error('Admin register error:', err);
+      throw err;
+    }
   };
 
   const logout = async () => {
     try {
       await axios.get(`${api}/logout`, { withCredentials: true });
     } catch (err) {
-      console.error(err);
+      console.error('Logout error:', err);
     } finally {
-      setCurrentUser(null);
-      localStorage.removeItem('user');
+      saveUser(null);
     }
   };
 
@@ -64,35 +84,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await axios.get(`${api}/admin/logout`, { withCredentials: true });
     } catch (err) {
-      console.error(err);
+      console.error('Admin logout error:', err);
     } finally {
-      setCurrentUser(null);
-      localStorage.removeItem('user');
+      saveUser(null);
     }
   };
 
+  // ---------- FETCH AUTH STATUS ---------- //
+
   useEffect(() => {
+    // Restore user from localStorage immediately to avoid flicker
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+
     const fetchAuthStatus = async () => {
       try {
         let res = await axios.get(`${api}/isLoggedin`, { withCredentials: true });
         if (!res.data?.user) {
           res = await axios.get(`${api}/admin/isLoggedin`, { withCredentials: true });
         }
+
         if (res.data?.user) {
-          setCurrentUser(res.data.user);
+          saveUser(res.data.user);
         } else {
-          setCurrentUser(null);
+          saveUser(null);
         }
       } catch (error) {
-        setCurrentUser(null);
+        console.error('Auth status error:', error);
+        saveUser(null);
       } finally {
         setLoading(false);
       }
     };
-    fetchAuthStatus();
-  }, []);
 
-  const value = {
+    fetchAuthStatus();
+  }, [api]);
+
+  // ---------- CONTEXT VALUE ---------- //
+
+  const value: AuthContextType = {
     currentUser,
     user: currentUser,
     login,
@@ -101,11 +133,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     adminLogin,
     adminRegister,
     adminLogout,
-    loading
+    loading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// ---------- HOOK ---------- //
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -119,15 +153,14 @@ export const useAuth = () => {
 
 
 // import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-// import { User } from '../types';
-// import { mockAuth } from '../lib/mockAuth';
 // import axios from 'axios';
+// import { User } from '../types';
 
 // interface AuthContextType {
 //   currentUser: User | null;
-//   user: User | null; // Add user alias for compatibility
+//   user: User | null;
 //   login: (email: string, password: string) => Promise<void>;
-//   register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
+//   register: (firstName: string, phone: string, email: string, password: string) => Promise<void>;
 //   logout: () => Promise<void>;
 //   adminLogin: (email: string, password: string) => Promise<void>;
 //   adminRegister: (firstName: string, email: string, password: string) => Promise<void>;
@@ -144,77 +177,78 @@ export const useAuth = () => {
 
 //   const login = async (email: string, password: string) => {
 //     const res = await axios.post(`${api}/login`, { email, password }, { withCredentials: true });
-//     // const user = await mockAuth.signIn(email, password);
 //     const user = res.data.user;
 //     setCurrentUser(user);
+//     localStorage.setItem('user', JSON.stringify(user));
 //   };
 
 //   const adminLogin = async (email: string, password: string) => {
 //     const res = await axios.post(`${api}/admin/login`, { email, password }, { withCredentials: true });
 //     const user = res.data.user;
 //     setCurrentUser(user);
-//   }
+//     localStorage.setItem('user', JSON.stringify(user));
+//   };
 
 //   const register = async (firstName: string, phone: string, email: string, password: string) => {
-//     const res = axios.post(`${api}/register`, { name: firstName, phone, email, password }, { withCredentials: true });
-//     // const user = await mockAuth.signUp(firstName, lastName, email, password);
-//     const user = (await res).data.user;
+//     const res = await axios.post(`${api}/register`, { name: firstName, phone, email, password }, { withCredentials: true });
+//     const user = res.data.user;
 //     setCurrentUser(user);
+//     localStorage.setItem('user', JSON.stringify(user));
 //   };
 
 //   const adminRegister = async (firstName: string, email: string, password: string) => {
-//     const res = axios.post(`${api}/admin/register`, { name: firstName, email, password }, { withCredentials: true });
-//     const user = (await res).data.user;
+//     const res = await axios.post(`${api}/admin/register`, { name: firstName, email, password }, { withCredentials: true });
+//     const user = res.data.user;
 //     setCurrentUser(user);
-//   }
+//     localStorage.setItem('user', JSON.stringify(user));
+//   };
 
 //   const logout = async () => {
-//     // await mockAuth.signOut();
-//     await axios.get(`${api}/logout`, { withCredentials: true });
-//     setCurrentUser(null);
-//     localStorage.removeItem('user');
+//     try {
+//       await axios.get(`${api}/logout`, { withCredentials: true });
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       setCurrentUser(null);
+//       localStorage.removeItem('user');
+//     }
 //   };
 
 //   const adminLogout = async () => {
-//     await axios.get(`${api}/admin/logout`, { withCredentials: true });
-//     setCurrentUser(null);
-//   }
+//     try {
+//       await axios.get(`${api}/admin/logout`, { withCredentials: true });
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       setCurrentUser(null);
+//       localStorage.removeItem('user');
+//     }
+//   };
 
 //   useEffect(() => {
-//     // Check for existing user on mount
-//     // const user = mockAuth.getCurrentUser();
-//     const fetchUser = async () => {
+//     const fetchAuthStatus = async () => {
 //       try {
-//         const res = await axios.get(`${api}/isLoggedin`, { withCredentials: true });
-//         const user = res.data.user;
-//         setCurrentUser(user);
-//         setLoading(false);
-//       }
-//       catch (error) {
+//         let res = await axios.get(`${api}/isLoggedin`, { withCredentials: true });
+//         if (!res.data?.user) {
+//           res = await axios.get(`${api}/admin/isLoggedin`, { withCredentials: true });
+//         }
+//         if (res.data?.user) {
+//           setCurrentUser(res.data.user);
+//         } else {
+//           setCurrentUser(null);
+//         }
+//       } catch (error) {
 //         setCurrentUser(null);
+//       } finally {
 //         setLoading(false);
 //       }
-//     }
-
-//     const fetchAdmin = async () => {
-//       try {
-//         const res = await axios.get(`${api}/admin/isLoggedin`, { withCredentials: true });
-//         const user = res.data.user;
-//         setCurrentUser(user);
-//         setLoading(false);
-//       }
-//       catch (error) {
-//         setCurrentUser(null);
-//         setLoading(false);
-//       }
-//     }
-//     fetchUser();
-//     fetchAdmin();
+//     };
+//     fetchAuthStatus();
 //   }, []);
 
 //   const value = {
 //     currentUser,
-//     user: currentUser, // Add user alias for compatibility
+//     user: currentUser,
 //     login,
 //     register,
 //     logout,
@@ -224,17 +258,11 @@ export const useAuth = () => {
 //     loading
 //   };
 
-//   return (
-//     <AuthContext.Provider value={value}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
+//   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 // };
 
 // export const useAuth = () => {
 //   const context = useContext(AuthContext);
-//   if (!context) {
-//     throw new Error('useAuth must be used within an AuthProvider');
-//   }
+//   if (!context) throw new Error('useAuth must be used within an AuthProvider');
 //   return context;
 // };
