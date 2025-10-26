@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import {
   ShoppingBagIcon,
   CubeIcon,
@@ -8,6 +9,7 @@ import {
   ArrowTrendingUpIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
+import { Product } from '../types';
 import AdminLayout from './AdminLayout';
 
 interface DashboardStats {
@@ -18,80 +20,146 @@ interface DashboardStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  // Use static demo data for instant loading
-  const stats: DashboardStats = {
-    totalProducts: 156,
-    totalOrders: 2847,
-    totalRevenue: 45820.50,
-    pendingOrders: 12,
+  const [products, setProducts] = useState<Product>([]);
+  const [orders, setOrders] = useState([] as any[]);
+  const [recentOrders, setRecentOrders] = useState([] as any[]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingOrders: 0
+  });
+  const [orderChange, setOrderChange] = useState(0);
+  const [revenueChange, setRevenueChange] = useState(0);
+  const [pendingChange, setPendingChange] = useState(0);
+  const [productChange, setProductChange] = useState(0);
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
+      const prods = res.data;
+      setProducts(prods);
+    } catch (error:any) {
+      console.error('Error fetching products:', error);
+    }
   };
 
-  const recentOrders = [
-    {
-      id: 'ORD12345',
-      customerInfo: { name: 'John Smith' },
-      total: 89.99,
-      status: 'pending',
-      createdAt: new Date('2024-01-15'),
-    },
-    {
-      id: 'ORD12346',
-      customerInfo: { name: 'Sarah Johnson' },
-      total: 156.50,
-      status: 'shipped',
-      createdAt: new Date('2024-01-14'),
-    },
-    {
-      id: 'ORD12347',
-      customerInfo: { name: 'Mike Davis' },
-      total: 234.00,
-      status: 'delivered',
-      createdAt: new Date('2024-01-13'),
-    },
-    {
-      id: 'ORD12348',
-      customerInfo: { name: 'Emily Wilson' },
-      total: 67.25,
-      status: 'pending',
-      createdAt: new Date('2024-01-12'),
-    },
-    {
-      id: 'ORD12349',
-      customerInfo: { name: 'David Brown' },
-      total: 198.75,
-      status: 'shipped',
-      createdAt: new Date('2024-01-11'),
-    },
-  ];
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders`);
+      const ords = res.data;
+      const sortedOrders = ords.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const recent = sortedOrders.slice(0, 5);
+      setOrders(ords);
+      setRecentOrders(recent);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const getChangeColor = (value) => {
+    if (value > 0) return 'text-green-500';
+    if (value < 0) return 'text-red-500';
+    return 'text-gray-500';
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchOrders();
+  }, []);
+  
+  useEffect(() => {
+    const prodNum = products.length;
+    const ordNum = orders.length;
+    const confirmedOrders = orders.filter(ord => ord.status !== 'pending');
+    const totRevenue = confirmedOrders.reduce((sum, ord) => sum + ord.totalAmount, 0);
+    const pendOrders = ordNum - confirmedOrders.length;
+    setStats({
+      totalProducts: prodNum,
+      totalOrders: ordNum,
+      totalRevenue: totRevenue,
+      pendingOrders: pendOrders
+    });
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+    const thisYear = now.getFullYear();
+    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+    
+    const thisMonthOrders = orders.filter(o => {
+      const d = new Date(o.createdAt);
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    });
+    
+    const lastMonthOrders = orders.filter(o => {
+      const d = new Date(o.createdAt);
+      return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+    });
+
+    const pendingOrdersThisMonth = thisMonthOrders.filter(o => o.status === 'pending').length;
+    const pendingOrdersLastMonth = lastMonthOrders.filter(o => o.status === 'pending').length;
+    
+    const pendingChangeValue = pendingOrdersLastMonth > 0
+      ? ((pendingOrdersThisMonth - pendingOrdersLastMonth) / pendingOrdersLastMonth) * 100
+      : 0;
+    setPendingChange(pendingChangeValue);
+
+    const productsLastMonth = products.filter(p => new Date(p.createdAt).getMonth() === lastMonth).length;
+    const productChangeValue = productsLastMonth > 0
+      ? ((products.length - productsLastMonth) / productsLastMonth) * 100
+      : 0;
+    setProductChange(productChangeValue);
+    
+    const revenueThisMonth = thisMonthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const revenueLastMonth = lastMonthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    
+    const orderCountThisMonth = thisMonthOrders.length;
+    const orderCountLastMonth = lastMonthOrders.length;
+    
+    const revenueChangeValue = revenueLastMonth > 0
+      ? ((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100
+      : 0;
+    setRevenueChange(revenueChangeValue);
+    const orderChangeValue = orderCountLastMonth > 0
+      ? ((orderCountThisMonth - orderCountLastMonth) / orderCountLastMonth) * 100
+      : 0;
+    setOrderChange(orderChangeValue);
+  }, [products, orders]);
+
+  const RupeeIcon = () => <span className="text-white text-lg font-bold">₹</span>;
 
   const statCards = [
     {
       title: 'Total Products',
       value: stats.totalProducts,
       icon: CubeIcon,
-      color: 'bg-blue-500',
-      change: '+12%',
+      color: getChangeColor(productChange),
+      change: productChange >= 0 ? `+${productChange.toFixed(1)}%` : `${productChange.toFixed(1)}%`,
     },
     {
       title: 'Total Orders',
       value: stats.totalOrders,
       icon: ShoppingBagIcon,
-      color: 'bg-green-500',
-      change: '+8%',
+      color: getChangeColor(orderChange),
+      change: orderChange >= 0 ? `+${orderChange.toFixed(1)}%` : `${orderChange.toFixed(1)}%`,
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
-      icon: CurrencyDollarIcon,
-      color: 'bg-yellow-500',
-      change: '+15%',
+      value: stats.totalRevenue.toLocaleString('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      icon: RupeeIcon,
+      color: getChangeColor(revenueChange),
+      change: revenueChange >= 0 ? `+${revenueChange.toFixed(1)}%` : `${revenueChange.toFixed(1)}%`,
     },
     {
       title: 'Pending Orders',
       value: stats.pendingOrders,
       icon: ClockIcon,
-      color: 'bg-red-500',
-      change: '-5%',
+      color: getChangeColor(pendingChange),
+      change: pendingChange >= 0 ? `+${pendingChange.toFixed(1)}%` : `${pendingChange.toFixed(1)}%`,
     },
   ];
 
@@ -127,8 +195,8 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center mt-4">
-                <ArrowTrendingUpIcon className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">{stat.change}</span>
+                <ArrowTrendingUpIcon className={`w-4 h-4 mr-1 ${stat.color}`} />
+                <span className={`text-sm font-medium ${stat.color}`}>{stat.change}</span>
                 <span className="text-sm text-gray-500 ml-1">from last month</span>
               </div>
             </motion.div>
@@ -156,6 +224,12 @@ const AdminDashboard: React.FC = () => {
                     Customer
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -168,15 +242,21 @@ const AdminDashboard: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {recentOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
+                  <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{order.id.slice(-8)}
+                      {"ORD-" + order._id.toString().slice(-6).toUpperCase()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.customerInfo.name}
+                      {order.userId?.name || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {order.userId?.phone || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {order.userId?.email || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.total.toFixed(2)}
+                      ${order.totalAmount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -192,7 +272,7 @@ const AdminDashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.createdAt.toLocaleDateString()}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}
