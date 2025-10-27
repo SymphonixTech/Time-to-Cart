@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CogIcon, UserIcon, BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import AdminLayout from './AdminLayout';
@@ -19,6 +19,12 @@ const AdminSettings: React.FC = () => {
     newPassword: ''
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData({ name: user.name, email: user.email, company: '' });
+    }
+  }, [user]);
+
   const tabs = [
     { id: 'profile', name: 'Profile', icon: UserIcon },
     // { id: 'notifications', name: 'Notifications', icon: BellIcon },
@@ -38,25 +44,25 @@ const AdminSettings: React.FC = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const res = await axios.put(`${import.meta.env.VITE_API_URL}/admin/update-profile`, formData, { withCredentials: true });
+      await axios.put(`${import.meta.env.VITE_API_URL}/admin/update-profile`, formData, { withCredentials: true });
       toast.success('Profile updated successfully');
     }
-    catch(error) {
-      toast.success('Error: ',error.message);
+    catch (error: any) {
+      toast.error('Error: ' + (error.response?.data?.message || error.message));
     }
   };
 
   const handleChangePassword = async () => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/admin/change-password`, passwd, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL}/admin/change-password`, passwd, { withCredentials: true });
       setPasswd({
         oldPassword: '',
         newPassword: ''
       });
       toast.success('Password updated successfully');
     }
-    catch(error) {
-      toast.success('Error: ', error.message);
+    catch (error: any) {
+      toast.error('Error: ' + (error.response?.data?.message || error.message));
     }
   }
 
@@ -144,7 +150,7 @@ const AdminSettings: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Security Settings</h3>
               <div className="space-y-4">
                 <div>
-                  <div>
+                  <div className="mb-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Old Password
                     </label>
@@ -156,7 +162,7 @@ const AdminSettings: React.FC = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                     />
                   </div>
-                  <div>
+                  <div className="mb-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       New Password
                     </label>
