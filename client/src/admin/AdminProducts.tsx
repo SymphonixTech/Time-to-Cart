@@ -4,7 +4,7 @@ import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { MongoService } from '../services/mongoService';
 import { Product } from '../types';
 import AdminLayout from './AdminLayout';
-import AddProductModal from './AddProductModal';
+import AddEditProductModal from './AddProductModal';
 import BagLoader from '../components/BagLoader';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -178,7 +178,7 @@ const AdminProducts: React.FC = () => {
         </motion.div>
 
         {/* Add Product Modal */}
-        <AddProductModal
+        <AddEditProductModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onProductAdded={fetchProducts}
