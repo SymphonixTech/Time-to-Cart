@@ -163,6 +163,40 @@ app.get('/api/admin/isLoggedin', async (req, res) => {
     }
 });
 
+app.put('/api/admin/update-profile', verifyAdmin, async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    const user = await User.findById(req.user._id);
+    if(!user) return res.status(400).json({ error: 'User not found' });
+    user.email = email || user.email;
+    user.name = name || user.name;
+    await user.save();
+    res.status(200).json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/change-password', verifyAdmin, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id).select('+password');
+    if(!user) return res.status(400).json({ error: 'User not found' });
+    const validPassword = await bcrypt.compare(oldPassword, user.password);
+    if(!validPassword) return res.status(400).json({ error: 'Invalid old password' });
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    user.lastUpdate = Date.now();
+    await user.save();
+    await sendEmail({ email: user.email , emailType: 'PASSWORD CHANGED', userId: user._id});
+    res.status(200).json({ message: 'Password changed successfully' });
+  }
+  catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/login', async (req, res) => {
   try {
         const { email, password } = req.body;
