@@ -1,27 +1,29 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CogIcon, UserIcon, BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import AdminLayout from './AdminLayout';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const AdminSettings: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+    name:  user?.name ||  '',
     email: user?.email || '',
-    phone: '',
     company: '',
+  });
+  const [passwd, setPasswd] = useState({
+    oldPassword: '',
+    newPassword: ''
   });
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: UserIcon },
-    { id: 'notifications', name: 'Notifications', icon: BellIcon },
+    // { id: 'notifications', name: 'Notifications', icon: BellIcon },
     { id: 'security', name: 'Security', icon: ShieldCheckIcon },
-    { id: 'general', name: 'General', icon: CogIcon },
+    // { id: 'general', name: 'General', icon: CogIcon },
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,9 +31,34 @@ const AdminSettings: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = () => {
-    toast.success('Profile updated successfully');
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name,value }  = e.target;
+    setPasswd(prev=> ({ ...prev, [name]: value }));
   };
+
+  const handleSaveProfile = async () => {
+    try {
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/admin/update-profile`, formData, { withCredentials: true });
+      toast.success('Profile updated successfully');
+    }
+    catch(error) {
+      toast.success('Error: ',error.message);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/admin/change-password`, passwd, { withCredentials: true });
+      setPasswd({
+        oldPassword: '',
+        newPassword: ''
+      });
+      toast.success('Password updated successfully');
+    }
+    catch(error) {
+      toast.success('Error: ', error.message);
+    }
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -43,24 +70,12 @@ const AdminSettings: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name
+                    Name
                   </label>
                   <input
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   />
@@ -73,18 +88,6 @@ const AdminSettings: React.FC = () => {
                     type="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   />
@@ -102,37 +105,37 @@ const AdminSettings: React.FC = () => {
           </div>
         );
 
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Order Notifications</h4>
-                    <p className="text-sm text-gray-500">Get notified when new orders are placed</p>
-                  </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Email Notifications</h4>
-                    <p className="text-sm text-gray-500">Receive email notifications for important updates</p>
-                  </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Weekly Reports</h4>
-                    <p className="text-sm text-gray-500">Get weekly sales and performance reports</p>
-                  </div>
-                  <input type="checkbox" className="rounded" />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+      // case 'notifications':
+      //   return (
+      //     <div className="space-y-6">
+      //       <div>
+      //         <h3 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h3>
+      //         <div className="space-y-4">
+      //           <div className="flex items-center justify-between">
+      //             <div>
+      //               <h4 className="text-sm font-medium text-gray-900">Order Notifications</h4>
+      //               <p className="text-sm text-gray-500">Get notified when new orders are placed</p>
+      //             </div>
+      //             <input type="checkbox" className="rounded" defaultChecked />
+      //           </div>
+      //           <div className="flex items-center justify-between">
+      //             <div>
+      //               <h4 className="text-sm font-medium text-gray-900">Email Notifications</h4>
+      //               <p className="text-sm text-gray-500">Receive email notifications for important updates</p>
+      //             </div>
+      //             <input type="checkbox" className="rounded" defaultChecked />
+      //           </div>
+      //           <div className="flex items-center justify-between">
+      //             <div>
+      //               <h4 className="text-sm font-medium text-gray-900">Weekly Reports</h4>
+      //               <p className="text-sm text-gray-500">Get weekly sales and performance reports</p>
+      //             </div>
+      //             <input type="checkbox" className="rounded" />
+      //           </div>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
       case 'security':
         return (
@@ -141,63 +144,87 @@ const AdminSettings: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Security Settings</h3>
               <div className="space-y-4">
                 <div>
-                  <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Old Password
+                    </label>
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      value={passwd.oldPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={passwd.newPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+                  <button onClick={handleChangePassword} className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors">
                     Change Password
                   </button>
                 </div>
-                <div className="border-t pt-4">
+                {/* <div className="border-t pt-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Two-Factor Authentication</h4>
                   <p className="text-sm text-gray-500 mb-4">Add an extra layer of security to your account</p>
                   <button className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition-colors">
                     Enable 2FA
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
         );
 
-      case 'general':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">General Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Store Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue="Modern E-Commerce"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Currency
-                  </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Time Zone
-                  </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
-                    <option value="UTC-5">Eastern Time (UTC-5)</option>
-                    <option value="UTC-6">Central Time (UTC-6)</option>
-                    <option value="UTC-7">Mountain Time (UTC-7)</option>
-                    <option value="UTC-8">Pacific Time (UTC-8)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+      // case 'general':
+      //   return (
+      //     <div className="space-y-6">
+      //       <div>
+      //         <h3 className="text-lg font-medium text-gray-900 mb-4">General Settings</h3>
+      //         <div className="space-y-4">
+      //           <div>
+      //             <label className="block text-sm font-medium text-gray-700 mb-2">
+      //               Store Name
+      //             </label>
+      //             <input
+      //               type="text"
+      //               defaultValue="Modern E-Commerce"
+      //               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+      //             />
+      //           </div>
+      //           <div>
+      //             <label className="block text-sm font-medium text-gray-700 mb-2">
+      //               Currency
+      //             </label>
+      //             <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+      //               <option value="USD">USD ($)</option>
+      //               <option value="EUR">EUR (€)</option>
+      //               <option value="GBP">GBP (£)</option>
+      //             </select>
+      //           </div>
+      //           <div>
+      //             <label className="block text-sm font-medium text-gray-700 mb-2">
+      //               Time Zone
+      //             </label>
+      //             <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+      //               <option value="UTC-5">Eastern Time (UTC-5)</option>
+      //               <option value="UTC-6">Central Time (UTC-6)</option>
+      //               <option value="UTC-7">Mountain Time (UTC-7)</option>
+      //               <option value="UTC-8">Pacific Time (UTC-8)</option>
+      //             </select>
+      //           </div>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
       default:
         return null;
