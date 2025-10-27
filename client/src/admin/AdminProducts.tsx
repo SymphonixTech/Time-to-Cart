@@ -181,7 +181,7 @@ const AdminProducts: React.FC = () => {
         <AddEditProductModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
-          onProductAdded={fetchProducts}
+          onProductSaved={fetchProducts}
           productToEdit={editingProduct}
         />
       </div>
