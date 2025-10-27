@@ -7,11 +7,13 @@ import AdminLayout from './AdminLayout';
 import AddProductModal from './AddProductModal';
 import BagLoader from '../components/BagLoader';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const AdminProducts: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null); // State for editing product
 
@@ -22,8 +24,10 @@ const AdminProducts: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const productsData = await MongoService.getProducts();
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`, { withCredentials: true });
+      const productsData = res.data;
       setProducts(productsData);
+      setFilteredProducts(productsData);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to fetch products');
@@ -36,8 +40,8 @@ const AdminProducts: React.FC = () => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      await MongoService.deleteProduct(productId);
-      setProducts(products.filter(product => product.id !== productId));
+      await axios.delete(`${import.meta.env.VITE_API_URL}/admin/products/${productId}`, { withCredentials: true });
+      setProducts(products.filter(product => product._id !== productId));
       toast.success('Product deleted successfully');
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -45,17 +49,22 @@ const AdminProducts: React.FC = () => {
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    (product.title || product.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
     setShowAddModal(true);
   };
-
-
+  
+  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+  
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/products/search?q=${encodeURIComponent(term)}`);
+      setFilteredProducts(res.data);
+    } catch (error) {
+      toast.error('Search failed');
+    }
+  };
 
   return (
     <AdminLayout>
@@ -84,7 +93,7 @@ const AdminProducts: React.FC = () => {
             type="text"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearch}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
           />
         </div>
@@ -118,17 +127,17 @@ const AdminProducts: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProducts.map((product) => (
-                  <tr key={product.id}>
+                  <tr key={product._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <img
                           className="h-10 w-10 rounded-lg object-cover"
-                          src={product.imageUrl}
-                          alt={product.title || product.name}
+                          src={product.images?.[0]}
+                          alt={product.name}
                         />
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {product.title || product.name}
+                            {product.name}
                           </div>
                         </div>
                       </div>
@@ -139,10 +148,10 @@ const AdminProducts: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${product.price.toFixed(2)}
+                      ₹{product.price.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.stock}
+                      {product.stockQuantity}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
@@ -153,7 +162,7 @@ const AdminProducts: React.FC = () => {
                           <PencilIcon className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteProduct(product.id)}
+                          onClick={() => handleDeleteProduct(product._id)}
                           className="text-red-600 hover:text-red-900"
                           disabled={loading}
                         >
