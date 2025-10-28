@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import AdminLayout from './AdminLayout';
-import AddEditProductModal from './AddProductModal';
+import AddProductModal from './AddProductModal';
 import BagLoader from '../components/BagLoader';
 import toast from 'react-hot-toast';
 import axios from 'axios';
