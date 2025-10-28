@@ -97,8 +97,8 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
 
   useEffect(() => {
     if (productToEdit) {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         ...productToEdit,
         tags: productToEdit.tags?.join(", ") || "",
         estimatedDays: productToEdit.deliveryInfo?.estimatedDays || "",
@@ -109,7 +109,7 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
         Weight: productToEdit.specifications?.Weight || "",
         Burn_Time: productToEdit.specifications?.Burn_Time || "",
         Scent: productToEdit.specifications?.Scent || "",
-      });
+      }));
     } else {
       resetForm();
     }
