@@ -625,8 +625,7 @@ app.get('/api/products/:id', async (req, res) => {
 app.post('/api/admin/products', verifyAdmin, upload.array('files', 4), async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
-    const { name, description, price, originalPrice, category, subcategory, inStock, stockQuantity, featured, bestSeller, addToSliders, addToTopCard, status, tags,
-      Material, Dimensions, Weight, Burn_Time, Scent, freeDelivery, estimatedDays, freeDelivery, returnPolicy } = req.body;
+    const { name, description, price, originalPrice, category, subcategory, inStock, stockQuantity, sales, featured, tags, estimatedDays, freeDelivery, returnPolicy, Material, Dimensions, Weight, Burn_Time, Scent } = req.body;
     if(!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'At least one image is required' });
     }
@@ -640,13 +639,10 @@ app.post('/api/admin/products', verifyAdmin, upload.array('files', 4), async (re
       subcategory,
       inStock,
       stockQuantity,
+      sales: Number(sales),
       featured,
-      bestSeller,
-      addToSliders,
-      addToTopCard,
-      status,
       tags: tags,
-      deliveryInfo: { estimatedDays: Number(estimatedDays), returnPolicy, freeDelivery: freeDelivery === 'true' || freeDelivery === true },
+      deliveryInfo: { estimatedDays: Number(estimatedDays), returnPolicy, freeDelivery: freeDelivery === 'true' },
       specifications: { Material, Dimensions, Weight, Burn_Time, Scent }
     });
     const urls = await Promise.all(
@@ -669,87 +665,160 @@ app.post('/api/admin/products', verifyAdmin, upload.array('files', 4), async (re
   }
 });
 
-app.put('/api/admin/products/:id', verifyAdmin, upload.array('images', 4), async (req, res) => {
+app.put('/api/admin/products/status/:id', verifyAdmin, async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
-    let product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-    const newImageUrls = Array.isArray(req.body.images)
-      ? req.body.images
-      : req.body.images ? [req.body.images] : [];
-    const removedImages = product.images.filter(url => !newImageUrls.includes(url));
-
-    for (const url of removedImages) {
-      try {
-        const parts = url.split('/');
-        const uploadIndex = parts.indexOf('upload');
-        const folderAndFile = parts.slice(uploadIndex + 1).join('/');
-        const publicIdWithExtension = folderAndFile.split('/').slice(1).join('/');
-        const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
-        await deleteFromCloudinary(publicId);
-      } catch (err) {
-        res.status(400).json({ error: 'Failed to update product' });
-      }
-    }
-
-    let uploadedUrls = [];
-    if (req.files && req.files.length) {
-      uploadedUrls = await Promise.all(
-        req.files.map(async (f) => {
-          const buffer = f.buffer;
-          return await uploadToCloudinary(buffer, 'products');
-        })
-      );
-    }
-
-    product.images = [
-      ...newImageUrls,
-      ...uploadedUrls.filter(Boolean),
-    ];
-
-    product.name = req.body.name || product.name;
-    product.description = req.body.description || product.description;
-    product.price = Number(req.body.price) || product.price;
-    product.originalPrice = Number(req.body.originalPrice) || product.originalPrice;
-    product.category = req.body.category || product.category;
-    product.subcategory = req.body.subcategory || product.subcategory;
-    product.inStock = req.body.inStock === 'true' || req.body.inStock === true;
-    product.stockQuantity = Number(req.body.stockQuantity) || product.stockQuantity;
-    product.featured = req.body.featured === 'true' || req.body.featured === true;
-    product.bestSeller = req.body.bestSeller === 'true' || req.body.bestSeller === true;
-    product.addToSliders = req.body.addToSliders === 'true' || req.body.addToSliders === true;
-    product.addToTopCard = req.body.addToTopCard === 'true' || req.body.addToTopCard === true;
-    product.status = req.body.status || product.status;
-
-    product.tags = Array.isArray(req.body.tags)
-      ? req.body.tags
-      : typeof req.body.tags === "string" && !!req.body.tags
-        ? JSON.parse(req.body.tags)
-        : product.tags;
-
-    if (req.body.deliveryInfo) {
-      const info = typeof req.body.deliveryInfo === "string" ? JSON.parse(req.body.deliveryInfo) : req.body.deliveryInfo;
-      product.deliveryInfo = {
-        ...product.deliveryInfo,
-        ...info
-      };
-    }
-
-    if (req.body.specifications) {
-      const specs = typeof req.body.specifications === "string" ? JSON.parse(req.body.specifications) : req.body.specifications;
-      product.specifications = {
-        ...product.specifications,
-        ...specs
-      };
-    }
-
+    const product = await Product.findById(req.params.id);
+    const { status } = req.body;
+    product.status = status;
     await product.save();
     res.status(200).json(product);
   } catch (error) {
-    console.error(error);
+    res.status(400).json({ error: 'Failed to update product status' });
+  }
+});
+
+app.put('/api/admin/products/:id', verifyAdmin, async (req, res) => {
+  try {
+    const { default: Product } = await import('./models/Product.js');
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.status(200).json(product);
+  } catch (error) {
     res.status(400).json({ error: 'Failed to update product' });
   }
 });
+
+// app.post('/api/admin/products', verifyAdmin, upload.array('files', 4), async (req, res) => {
+//   try {
+//     const { default: Product } = await import('./models/Product.js');
+//     const { name, description, price, originalPrice, category, subcategory, inStock, stockQuantity, featured, bestSeller, addToSliders, addToTopCard, status, tags,
+//       Material, Dimensions, Weight, Burn_Time, Scent, freeDelivery, estimatedDays, freeDelivery, returnPolicy } = req.body;
+//     if(!req.files || req.files.length === 0) {
+//       return res.status(400).json({ error: 'At least one image is required' });
+//     }
+
+//     const product = new Product({
+//       name,
+//       description,
+//       price,
+//       originalPrice,
+//       category,
+//       subcategory,
+//       inStock,
+//       stockQuantity,
+//       featured,
+//       bestSeller,
+//       addToSliders,
+//       addToTopCard,
+//       status,
+//       tags: tags,
+//       deliveryInfo: { estimatedDays: Number(estimatedDays), returnPolicy, freeDelivery: freeDelivery === 'true' || freeDelivery === true },
+//       specifications: { Material, Dimensions, Weight, Burn_Time, Scent }
+//     });
+//     const urls = await Promise.all(
+//       req.files.map(async (f) => {
+//         const buffer = f.buffer;
+//         return await uploadToCloudinary(buffer, 'products');
+//       })
+//     );
+
+//     product.images = urls.filter(Boolean);
+//     let getAllSubscribedUser = await User.find().select('-password');
+//     getAllSubscribedUser = getAllSubscribedUser.filter(user => user.subscription);
+//     await Promise.all(getAllSubscribedUser.map(async (user) => {
+//       await sendEmail({ email: user.email , emailType: 'NEW PRODUCT', userId: user._id, product });
+//     }));
+//     await product.save();
+//     res.status(201).json(product);
+//   } catch (error) {
+//     res.status(400).json({ error: 'Failed to create product' });
+//   }
+// });
+
+// app.put('/api/admin/products/:id', verifyAdmin, upload.array('images', 4), async (req, res) => {
+//   try {
+//     const { default: Product } = await import('./models/Product.js');
+//     let product = await Product.findById(req.params.id);
+//     if (!product) return res.status(404).json({ error: 'Product not found' });
+//     const newImageUrls = Array.isArray(req.body.images)
+//       ? req.body.images
+//       : req.body.images ? [req.body.images] : [];
+//     const removedImages = product.images.filter(url => !newImageUrls.includes(url));
+
+//     for (const url of removedImages) {
+//       try {
+//         const parts = url.split('/');
+//         const uploadIndex = parts.indexOf('upload');
+//         const folderAndFile = parts.slice(uploadIndex + 1).join('/');
+//         const publicIdWithExtension = folderAndFile.split('/').slice(1).join('/');
+//         const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
+//         await deleteFromCloudinary(publicId);
+//       } catch (err) {
+//         res.status(400).json({ error: 'Failed to update product' });
+//       }
+//     }
+
+//     let uploadedUrls = [];
+//     if (req.files && req.files.length) {
+//       uploadedUrls = await Promise.all(
+//         req.files.map(async (f) => {
+//           const buffer = f.buffer;
+//           return await uploadToCloudinary(buffer, 'products');
+//         })
+//       );
+//     }
+
+//     product.images = [
+//       ...newImageUrls,
+//       ...uploadedUrls.filter(Boolean),
+//     ];
+
+//     product.name = req.body.name || product.name;
+//     product.description = req.body.description || product.description;
+//     product.price = Number(req.body.price) || product.price;
+//     product.originalPrice = Number(req.body.originalPrice) || product.originalPrice;
+//     product.category = req.body.category || product.category;
+//     product.subcategory = req.body.subcategory || product.subcategory;
+//     product.inStock = req.body.inStock === 'true' || req.body.inStock === true;
+//     product.stockQuantity = Number(req.body.stockQuantity) || product.stockQuantity;
+//     product.featured = req.body.featured === 'true' || req.body.featured === true;
+//     product.bestSeller = req.body.bestSeller === 'true' || req.body.bestSeller === true;
+//     product.addToSliders = req.body.addToSliders === 'true' || req.body.addToSliders === true;
+//     product.addToTopCard = req.body.addToTopCard === 'true' || req.body.addToTopCard === true;
+//     product.status = req.body.status || product.status;
+
+//     product.tags = Array.isArray(req.body.tags)
+//       ? req.body.tags
+//       : typeof req.body.tags === "string" && !!req.body.tags
+//         ? JSON.parse(req.body.tags)
+//         : product.tags;
+
+//     if (req.body.deliveryInfo) {
+//       const info = typeof req.body.deliveryInfo === "string" ? JSON.parse(req.body.deliveryInfo) : req.body.deliveryInfo;
+//       product.deliveryInfo = {
+//         ...product.deliveryInfo,
+//         ...info
+//       };
+//     }
+
+//     if (req.body.specifications) {
+//       const specs = typeof req.body.specifications === "string" ? JSON.parse(req.body.specifications) : req.body.specifications;
+//       product.specifications = {
+//         ...product.specifications,
+//         ...specs
+//       };
+//     }
+
+//     await product.save();
+//     res.status(200).json(product);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).json({ error: 'Failed to update product' });
+//   }
+// });
 
 app.delete('/api/admin/products/:id', verifyAdmin, async (req, res) => {
   try {
