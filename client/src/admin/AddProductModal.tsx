@@ -1,73 +1,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast from "react-hot-toast";
-import { motion } from "framer-motion";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { toast } from "react-hot-toast";
 
-interface ProductFormData {
-  name: string;
-  description: string;
-  price: number | string;
-  originalPrice: number | string;
-  category: string;
-  subcategory: string;
-  inStock: boolean;
-  stockQuantity: number | string;
-  sales: number | string;
-  tags: string;
-  estimatedDays: number | string;
-  freeDelivery: boolean;
-  returnPolicy: string;
-  Material: string;
-  Dimensions: string;
-  Weight: string;
-  Burn_Time: string;
-  Scent: string;
-  addToSliders: boolean;
-  bestSeller: boolean;
-  featured: boolean;
-  status: string;
-}
-
-interface AddEditProductModalProps {
+interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onProductSaved: () => void;
-  productToEdit?: any | null;
+  onProductAdded: () => void;
+  productToEdit?: any;
 }
 
-const categories = ["Candles", "Religious Products", "Kids Stationery", "Gifts"];
-
-const subCategories: Record<string, string[]> = {
-  Candles: [
-    "Scented Candles",
-    "Soy Wax",
-    "Decor Candles",
-    "Aromatherapy",
-    "Luxury Collection",
-    "Gift Sets",
-  ],
-  "Religious Products": [],
-  "Kids Stationery": [],
-  Gifts: [],
-};
-
-const statusOptions = [
-  "new",
-  "sale",
-  "discounted",
-  "featured",
-  "bestseller",
-  "trending",
-];
-
-const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
+const AddProductModal: React.FC<AddProductModalProps> = ({
   isOpen,
   onClose,
-  onProductSaved,
+  onProductAdded,
   productToEdit,
 }) => {
-  const [formData, setFormData] = useState<ProductFormData>({
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
@@ -77,6 +25,10 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
     inStock: true,
     stockQuantity: "",
     sales: "",
+    featured: false,
+    bestSeller: false,
+    addToSliders: false,
+    addToTopCard: false,
     tags: "",
     estimatedDays: "",
     freeDelivery: false,
@@ -86,37 +38,27 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
     Weight: "",
     Burn_Time: "",
     Scent: "",
-    addToSliders: false,
-    bestSeller: false,
-    featured: false,
     status: "new",
   });
 
   const [files, setFiles] = useState<File[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (productToEdit) {
-      setFormData(prev => ({
-        ...prev,
-        ...productToEdit,
-        tags: productToEdit.tags?.join(", ") || "",
-        estimatedDays: productToEdit.deliveryInfo?.estimatedDays || "",
-        freeDelivery: productToEdit.deliveryInfo?.freeDelivery || false,
-        returnPolicy: productToEdit.deliveryInfo?.returnPolicy || "",
-        Material: productToEdit.specifications?.Material || "",
-        Dimensions: productToEdit.specifications?.Dimensions || "",
-        Weight: productToEdit.specifications?.Weight || "",
-        Burn_Time: productToEdit.specifications?.Burn_Time || "",
-        Scent: productToEdit.specifications?.Scent || "",
-      }));
-    } else {
-      resetForm();
-    }
-  }, [productToEdit]);
+  const categories = [
+    "Candles",
+    "Religious Products",
+    "Kids Stationery",
+    "Gifts",
+  ];
 
-  if (!isOpen) return null;
+  const subcategories = [
+    "Scented Candles",
+    "Soy Wax",
+    "Gift Sets",
+    "Decor Candles",
+    "Aromatherapy",
+  ];
 
+  // Reset form
   const resetForm = () => {
     setFormData({
       name: "",
@@ -128,6 +70,10 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
       inStock: true,
       stockQuantity: "",
       sales: "",
+      featured: false,
+      bestSeller: false,
+      addToSliders: false,
+      addToTopCard: false,
       tags: "",
       estimatedDays: "",
       freeDelivery: false,
@@ -137,18 +83,34 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
       Weight: "",
       Burn_Time: "",
       Scent: "",
-      addToSliders: false,
-      bestSeller: false,
-      featured: false,
       status: "new",
     });
     setFiles([]);
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+  // Preload product data for edit mode
+  useEffect(() => {
+    if (productToEdit) {
+      setFormData({
+        ...formData,
+        ...productToEdit,
+        tags: productToEdit.tags
+          ? Array.isArray(productToEdit.tags)
+            ? productToEdit.tags.join(", ")
+            : productToEdit.tags
+          : "",
+      });
+    } else {
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productToEdit]);
+
+  if (!isOpen) return null;
+
+  // Handle input changes
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -157,291 +119,277 @@ const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
     });
   };
 
+  // Handle file uploads
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setFiles(Array.from(e.target.files));
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
+    }
   };
 
+  // Submit handler (Add / Edit)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
       const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        data.append(key, value as string);
-      });
-
-      // Handle complex nested fields
-      data.append(
-        "tags",
-        JSON.stringify(formData.tags.split(",").map((t) => t.trim()))
+      Object.entries(formData).forEach(([key, value]) =>
+        data.append(key, value as any)
       );
-      data.append(
-        "deliveryInfo",
-        JSON.stringify({
-          freeDelivery: formData.freeDelivery,
-          estimatedDays: formData.estimatedDays,
-          returnPolicy: formData.returnPolicy,
-        })
-      );
-      data.append(
-        "specifications",
-        JSON.stringify({
-          Material: formData.Material,
-          Dimensions: formData.Dimensions,
-          Weight: formData.Weight,
-          Burn_Time: formData.Burn_Time,
-          Scent: formData.Scent,
-        })
-      );
-
-      files.forEach((file) => data.append("images", file));
+      files.forEach((file) => data.append("files", file));
 
       if (productToEdit) {
-        await axios.put(
-          `${import.meta.env.VITE_API_URL}/admin/products/${productToEdit._id}`,
-          data,
-          { withCredentials: true }
-        );
-        toast.success("Product updated successfully!");
-      } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, data, {
-          withCredentials: true,
+        await axios.put(`/api/admin/products/${productToEdit._id}`, data, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Product added successfully!");
+        toast.success("✅ Product updated successfully");
+      } else {
+        await axios.post("/api/admin/products", data, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("✅ Product added successfully");
       }
 
-      onProductSaved();
+      onProductAdded();
       onClose();
       resetForm();
-    } catch (err) {
-      console.error(err);
-      toast.error("Error while saving product!");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("❌ Failed to save product");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl overflow-y-auto max-h-[90vh]"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">
-            {productToEdit ? "Edit Product" : "Add Product"}
-          </h2>
-          <button onClick={onClose}>
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4">
+          {productToEdit ? "Edit Product" : "Add New Product"}
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name, Description */}
+          {/* Basic Info */}
           <input
-            type="text"
             name="name"
-            placeholder="Product Name"
             value={formData.name}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
+            onChange={handleInputChange}
+            placeholder="Product Name"
             required
+            className="w-full p-3 border rounded-lg"
           />
           <textarea
             name="description"
-            placeholder="Description"
             value={formData.description}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-            rows={3}
+            onChange={handleInputChange}
+            placeholder="Product Description"
+            required
+            className="w-full p-3 border rounded-lg"
           />
 
-          {/* Prices */}
+          {/* Pricing */}
           <div className="grid grid-cols-2 gap-4">
             <input
-              type="number"
               name="price"
-              placeholder="Price"
               value={formData.price}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              onChange={handleInputChange}
+              placeholder="Price"
+              required
+              className="p-3 border rounded-lg"
             />
             <input
-              type="number"
               name="originalPrice"
-              placeholder="Original Price"
               value={formData.originalPrice}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              onChange={handleInputChange}
+              placeholder="Original Price"
+              className="p-3 border rounded-lg"
             />
           </div>
 
-          {/* Category & Subcategory */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Category */}
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleInputChange}
+            className="w-full p-3 border rounded-lg"
+          >
+            <option value="">Select Category</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+          {formData.category === "Candles" && (
             <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
-              required
+              name="subcategory"
+              value={formData.subcategory}
+              onChange={handleInputChange}
+              className="w-full p-3 border rounded-lg"
             >
-              <option value="">Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              <option value="">Select Subcategory</option>
+              {subcategories.map((sc) => (
+                <option key={sc} value={sc}>
+                  {sc}
                 </option>
               ))}
             </select>
+          )}
 
-            {subCategories[formData.category]?.length > 0 && (
-              <select
-                name="subcategory"
-                value={formData.subcategory}
-                onChange={handleChange}
-                className="w-full border rounded-lg p-2"
-              >
-                <option value="">Select Subcategory</option>
-                {subCategories[formData.category].map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* Stock & Sales */}
+          {/* Stock */}
           <div className="grid grid-cols-2 gap-4">
             <input
-              type="number"
               name="stockQuantity"
-              placeholder="Stock Quantity"
               value={formData.stockQuantity}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              onChange={handleInputChange}
+              placeholder="Stock Quantity"
+              className="p-3 border rounded-lg"
             />
             <input
-              type="number"
               name="sales"
-              placeholder="Sales Count"
               value={formData.sales}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              onChange={handleInputChange}
+              placeholder="Sales"
+              className="p-3 border rounded-lg"
             />
           </div>
 
           {/* Tags */}
           <input
-            type="text"
             name="tags"
-            placeholder="Tags (comma separated)"
             value={formData.tags}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
+            onChange={handleInputChange}
+            placeholder="Tags (comma-separated)"
+            className="w-full p-3 border rounded-lg"
           />
 
-          {/* Delivery Info */}
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              type="number"
-              name="estimatedDays"
-              placeholder="Estimated Delivery Days"
-              value={formData.estimatedDays}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
-            />
-            <input
-              type="text"
-              name="returnPolicy"
-              placeholder="Return Policy"
-              value={formData.returnPolicy}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
-            />
-          </div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="freeDelivery"
-              checked={formData.freeDelivery}
-              onChange={handleChange}
-            />
-            Free Delivery
-          </label>
-
-          {/* Specifications */}
-          <div className="grid grid-cols-2 gap-4">
-            {["Material", "Dimensions", "Weight", "Burn_Time", "Scent"].map(
-              (field) => (
-                <input
-                  key={field}
-                  type="text"
-                  name={field}
-                  placeholder={field}
-                  value={(formData as any)[field]}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-2"
-                />
-              )
-            )}
-          </div>
-
-          {/* Status + Checkboxes */}
-          <select
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          >
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-
+          {/* Checkboxes */}
           <div className="flex flex-wrap gap-4">
-            {["featured", "bestSeller", "addToSliders"].map((field) => (
-              <label key={field} className="flex items-center gap-2">
+            {[
+              { name: "featured", label: "Featured" },
+              { name: "bestSeller", label: "Best Seller" },
+              { name: "addToSliders", label: "Add to Sliders" },
+              { name: "addToTopCard", label: "Add to Top Card" },
+              { name: "freeDelivery", label: "Free Delivery" },
+              { name: "inStock", label: "In Stock" },
+            ].map((item) => (
+              <label key={item.name} className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  name={field}
-                  checked={(formData as any)[field]}
-                  onChange={handleChange}
+                  name={item.name}
+                  checked={
+                    formData[item.name as keyof typeof formData] as boolean
+                  }
+                  onChange={handleInputChange}
                 />
-                {field}
+                {item.label}
               </label>
             ))}
           </div>
 
-          {/* Image Upload */}
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="w-full border rounded-lg p-2"
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white rounded-lg py-2 hover:bg-gray-800 transition"
+          {/* Status */}
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleInputChange}
+            className="w-full p-3 border rounded-lg"
           >
-            {loading
-              ? "Saving..."
-              : productToEdit
-              ? "Update Product"
-              : "Add Product"}
-          </button>
+            {["new", "sale", "discounted", "featured", "bestseller", "trending"].map(
+              (s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              )
+            )}
+          </select>
+
+          {/* Extra Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              name="estimatedDays"
+              value={formData.estimatedDays}
+              onChange={handleInputChange}
+              placeholder="Estimated Delivery Days"
+              className="p-3 border rounded-lg"
+            />
+            <input
+              name="returnPolicy"
+              value={formData.returnPolicy}
+              onChange={handleInputChange}
+              placeholder="Return Policy"
+              className="p-3 border rounded-lg"
+            />
+            <input
+              name="Material"
+              value={formData.Material}
+              onChange={handleInputChange}
+              placeholder="Material"
+              className="p-3 border rounded-lg"
+            />
+            <input
+              name="Dimensions"
+              value={formData.Dimensions}
+              onChange={handleInputChange}
+              placeholder="Dimensions"
+              className="p-3 border rounded-lg"
+            />
+            <input
+              name="Weight"
+              value={formData.Weight}
+              onChange={handleInputChange}
+              placeholder="Weight"
+              className="p-3 border rounded-lg"
+            />
+            <input
+              name="Burn_Time"
+              value={formData.Burn_Time}
+              onChange={handleInputChange}
+              placeholder="Burn Time"
+              className="p-3 border rounded-lg"
+            />
+            <input
+              name="Scent"
+              value={formData.Scent}
+              onChange={handleInputChange}
+              placeholder="Scent"
+              className="p-3 border rounded-lg"
+            />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block font-medium mb-2">Upload Images</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full p-2 border rounded-lg"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {productToEdit ? "Update Product" : "Add Product"}
+            </button>
+          </div>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };
 
-export default AddEditProductModal;
+export default AddProductModal;
+
 
 
 
