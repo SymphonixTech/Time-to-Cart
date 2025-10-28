@@ -622,203 +622,251 @@ app.get('/api/products/:id', async (req, res) => {
   }
 })
 
-app.post('/api/admin/products', verifyAdmin, upload.array('files', 4), async (req, res) => {
+app.post('/api/admin/products', verifyAdmin, upload.array('images', 4), async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
-    const { name, description, price, originalPrice, category, subcategory, inStock, stockQuantity, sales, featured, tags, estimatedDays, freeDelivery, returnPolicy, Material, Dimensions, Weight, Burn_Time, Scent } = req.body;
-    if(!req.files || req.files.length === 0) {
+
+    // Allowed fields from client (sanitize)
+    const allowed = [
+      'name', 'description', 'price', 'originalPrice', 'category', 'subcategory',
+      'inStock', 'stockQuantity', 'featured', 'addToSliders', 'addToTopCard',
+      'bestSeller', 'status'
+    ];
+
+    // Basic required checks
+    if (!req.body.name || !req.body.description || !req.body.price || !req.body.category) {
+      return res.status(400).json({ error: 'Missing required fields: name, description, price, category' });
+    }
+
+    // Parse tags: client may send multiple tags fields or a JSON/string
+    let tags = [];
+    if (req.body.tags) {
+      if (Array.isArray(req.body.tags)) {
+        tags = req.body.tags;
+      } else {
+        try {
+          tags = JSON.parse(req.body.tags);
+          if (!Array.isArray(tags)) tags = typeof req.body.tags === 'string' ? req.body.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+        } catch {
+          // fallback to comma-separated
+          tags = String(req.body.tags).split(',').map(t => t.trim()).filter(Boolean);
+        }
+      }
+    }
+
+    // Parse deliveryInfo & specifications if passed as JSON string
+    let deliveryInfo = {};
+    if (req.body.deliveryInfo) {
+      try { deliveryInfo = typeof req.body.deliveryInfo === 'string' ? JSON.parse(req.body.deliveryInfo) : req.body.deliveryInfo; } catch { deliveryInfo = {}; }
+    } else {
+      deliveryInfo = {
+        freeDelivery: req.body.freeDelivery === 'true' || req.body.freeDelivery === true,
+        estimatedDays: req.body.estimatedDays ? Number(req.body.estimatedDays) : undefined,
+        returnPolicy: req.body.returnPolicy || undefined
+      };
+    }
+
+    let specifications = {};
+    if (req.body.specifications) {
+      try { specifications = typeof req.body.specifications === 'string' ? JSON.parse(req.body.specifications) : req.body.specifications; } catch { specifications = {}; }
+    } else {
+      specifications = {
+        Material: req.body.Material || undefined,
+        Dimensions: req.body.Dimensions || undefined,
+        Weight: req.body.Weight || undefined,
+        Burn_Time: req.body.Burn_Time || undefined,
+        Scent: req.body.Scent || undefined
+      };
+    }
+
+    // Upload files if present
+    const uploadedUrls = [];
+    if (req.files && req.files.length > 0) {
+      // upload each file buffer to cloudinary
+      const urls = await Promise.all(req.files.map(async (f) => {
+        const buffer = f.buffer;
+        return await uploadToCloudinary(buffer, 'products'); // assumes returns URL string or null
+      }));
+      for (const u of urls) if (u) uploadedUrls.push(u);
+    }
+
+    // If no images at all, reject
+    if (!uploadedUrls.length && (!req.body.images || (Array.isArray(req.body.images) && req.body.images.length === 0))) {
       return res.status(400).json({ error: 'At least one image is required' });
     }
 
-    const product = new Product({
-      name,
-      description,
-      price,
-      originalPrice,
-      category,
-      subcategory,
-      inStock,
-      stockQuantity,
-      sales: Number(sales),
-      featured,
-      tags: tags,
-      deliveryInfo: { estimatedDays: Number(estimatedDays), returnPolicy, freeDelivery: freeDelivery === 'true' },
-      specifications: { Material, Dimensions, Weight, Burn_Time, Scent }
-    });
-    const urls = await Promise.all(
-      req.files.map(async (f) => {
-        const buffer = f.buffer;
-        return await uploadToCloudinary(buffer, 'products');
-      })
-    );
+    // If client submitted images as strings (rare for create), include them too
+    let clientUrls = [];
+    if (req.body.images) {
+      if (Array.isArray(req.body.images)) clientUrls = req.body.images.filter(Boolean);
+      else clientUrls = [req.body.images].filter(Boolean);
+    }
 
-    product.images = urls.filter(Boolean);
+    const finalImages = [...clientUrls, ...uploadedUrls];
+
+    // Build product object from allowed fields only
+    const productPayload = {};
+    allowed.forEach(k => {
+      if (typeof req.body[k] !== 'undefined') {
+        // convert booleans and numbers where needed
+        if (k === 'inStock' || k === 'featured' || k === 'addToSliders' || k === 'addToTopCard' || k === 'bestSeller') {
+          productPayload[k] = req.body[k] === 'true' || req.body[k] === true;
+        } else if (k === 'price' || k === 'originalPrice' || k === 'stockQuantity') {
+          productPayload[k] = req.body[k] !== '' ? Number(req.body[k]) : undefined;
+        } else {
+          productPayload[k] = req.body[k];
+        }
+      }
+    });
+
+    productPayload.images = finalImages;
+    if (tags.length) productPayload.tags = tags;
+    if (deliveryInfo) productPayload.deliveryInfo = deliveryInfo;
+    if (specifications) productPayload.specifications = specifications;
+
+    const product = new Product(productPayload);
+    await product.save();
+
+    // Notify subscribed users (keep your original logic)
     let getAllSubscribedUser = await User.find().select('-password');
     getAllSubscribedUser = getAllSubscribedUser.filter(user => user.subscription);
     await Promise.all(getAllSubscribedUser.map(async (user) => {
-      await sendEmail({ email: user.email , emailType: 'NEW PRODUCT', userId: user._id, product });
+      await sendEmail({ email: user.email, emailType: 'NEW PRODUCT', userId: user._id, product });
     }));
-    await product.save();
-    res.status(201).json(product);
+
+    return res.status(201).json(product);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to create product' });
+    console.error('POST /admin/products error:', error);
+    return res.status(400).json({ error: 'Failed to create product' });
   }
 });
 
-app.put('/api/admin/products/status/:id', verifyAdmin, async (req, res) => {
+app.put('/api/admin/products/:id', verifyAdmin, upload.array('images', 4), async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
     const product = await Product.findById(req.params.id);
-    const { status } = req.body;
-    product.status = status;
-    await product.save();
-    res.status(200).json(product);
-  } catch (error) {
-    res.status(400).json({ error: 'Failed to update product status' });
-  }
-});
+    if (!product) return res.status(404).json({ error: 'Product not found' });
 
-app.put('/api/admin/products/:id', verifyAdmin, async (req, res) => {
-  try {
-    const { default: Product } = await import('./models/Product.js');
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
+    // parse kept client image urls from req.body.images (strings)
+    let keptUrls = [];
+    if (req.body.images) {
+      if (Array.isArray(req.body.images)) keptUrls = req.body.images.filter(Boolean);
+      else {
+        // sometimes when only one string is present multer gives string
+        // could be JSON too - try parse
+        try {
+          const maybe = JSON.parse(req.body.images);
+          if (Array.isArray(maybe)) keptUrls = maybe.filter(Boolean);
+          else keptUrls = [String(req.body.images)];
+        } catch {
+          keptUrls = [String(req.body.images)];
+        }
+      }
     }
-    res.status(200).json(product);
+
+    // determine which existing product images were removed
+    const previousImages = product.images || [];
+    const removedImages = previousImages.filter(url => !keptUrls.includes(url));
+
+    // delete removed images from cloudinary (use your helper)
+    for (const imgUrl of removedImages) {
+      try {
+        // derive publicId same as your delete code (or call helper)
+        const parts = imgUrl.split('/');
+        const uploadIndex = parts.indexOf('upload');
+        const folderAndFile = parts.slice(uploadIndex + 1).join('/');
+        const publicIdWithExtension = folderAndFile.split('/').slice(1).join('/');
+        const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
+        if (publicId) await deleteFromCloudinary(publicId);
+      } catch (err) {
+        console.warn('Failed to delete old image from cloudinary:', err);
+      }
+    }
+
+    // upload any new files
+    const uploadedUrls = [];
+    if (req.files && req.files.length > 0) {
+      const urls = await Promise.all(req.files.map(async (f) => {
+        const buffer = f.buffer;
+        return await uploadToCloudinary(buffer, 'products');
+      }));
+      for (const u of urls) if (u) uploadedUrls.push(u);
+    }
+
+    // final images = keptUrls (from client) + newly uploaded
+    const finalImages = [...(keptUrls || []), ...uploadedUrls];
+
+    // sanitize allowed update fields
+    const allowed = [
+      'name', 'description', 'price', 'originalPrice', 'category', 'subcategory',
+      'inStock', 'stockQuantity', 'featured', 'addToSliders', 'addToTopCard',
+      'bestSeller', 'status'
+    ];
+    const updatePayload = {};
+    allowed.forEach(k => {
+      if (typeof req.body[k] !== 'undefined') {
+        if (k === 'inStock' || k === 'featured' || k === 'addToSliders' || k === 'addToTopCard' || k === 'bestSeller') {
+          updatePayload[k] = req.body[k] === 'true' || req.body[k] === true;
+        } else if (k === 'price' || k === 'originalPrice' || k === 'stockQuantity') {
+          updatePayload[k] = req.body[k] !== '' ? Number(req.body[k]) : undefined;
+        } else {
+          updatePayload[k] = req.body[k];
+        }
+      }
+    });
+
+    // parse tags
+    let tags = undefined;
+    if (req.body.tags) {
+      if (Array.isArray(req.body.tags)) tags = req.body.tags;
+      else {
+        try {
+          const parsed = JSON.parse(req.body.tags);
+          tags = Array.isArray(parsed) ? parsed : String(req.body.tags).split(',').map(t => t.trim()).filter(Boolean);
+        } catch {
+          tags = String(req.body.tags).split(',').map(t => t.trim()).filter(Boolean);
+        }
+      }
+    }
+
+    // parse deliveryInfo and specifications (JSON or fields)
+    let deliveryInfo = product.deliveryInfo || {};
+    if (req.body.deliveryInfo) {
+      try { deliveryInfo = typeof req.body.deliveryInfo === 'string' ? JSON.parse(req.body.deliveryInfo) : req.body.deliveryInfo; } catch { /* noop */ }
+    } else {
+      // individual fields fallback
+      if (typeof req.body.freeDelivery !== 'undefined' || req.body.estimatedDays || req.body.returnPolicy) {
+        deliveryInfo = {
+          freeDelivery: req.body.freeDelivery === 'true' || req.body.freeDelivery === true,
+          estimatedDays: req.body.estimatedDays ? Number(req.body.estimatedDays) : deliveryInfo.estimatedDays,
+          returnPolicy: req.body.returnPolicy || deliveryInfo.returnPolicy
+        };
+      }
+    }
+
+    let specifications = product.specifications || {};
+    if (req.body.specifications) {
+      try { specifications = typeof req.body.specifications === 'string' ? JSON.parse(req.body.specifications) : req.body.specifications; } catch { /* noop */ }
+    } else {
+      ['Material', 'Dimensions', 'Weight', 'Burn_Time', 'Scent'].forEach(key => {
+        if (typeof req.body[key] !== 'undefined') specifications[key] = req.body[key];
+      });
+    }
+
+    // apply updates
+    Object.assign(product, updatePayload);
+    if (typeof tags !== 'undefined') product.tags = tags;
+    product.deliveryInfo = deliveryInfo;
+    product.specifications = specifications;
+    product.images = finalImages;
+
+    await product.save();
+    return res.status(200).json(product);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to update product' });
+    console.error('PUT /admin/products/:id error:', error);
+    return res.status(400).json({ error: 'Failed to update product' });
   }
 });
-
-// app.post('/api/admin/products', verifyAdmin, upload.array('files', 4), async (req, res) => {
-//   try {
-//     const { default: Product } = await import('./models/Product.js');
-//     const { name, description, price, originalPrice, category, subcategory, inStock, stockQuantity, featured, bestSeller, addToSliders, addToTopCard, status, tags,
-//       Material, Dimensions, Weight, Burn_Time, Scent, freeDelivery, estimatedDays, freeDelivery, returnPolicy } = req.body;
-//     if(!req.files || req.files.length === 0) {
-//       return res.status(400).json({ error: 'At least one image is required' });
-//     }
-
-//     const product = new Product({
-//       name,
-//       description,
-//       price,
-//       originalPrice,
-//       category,
-//       subcategory,
-//       inStock,
-//       stockQuantity,
-//       featured,
-//       bestSeller,
-//       addToSliders,
-//       addToTopCard,
-//       status,
-//       tags: tags,
-//       deliveryInfo: { estimatedDays: Number(estimatedDays), returnPolicy, freeDelivery: freeDelivery === 'true' || freeDelivery === true },
-//       specifications: { Material, Dimensions, Weight, Burn_Time, Scent }
-//     });
-//     const urls = await Promise.all(
-//       req.files.map(async (f) => {
-//         const buffer = f.buffer;
-//         return await uploadToCloudinary(buffer, 'products');
-//       })
-//     );
-
-//     product.images = urls.filter(Boolean);
-//     let getAllSubscribedUser = await User.find().select('-password');
-//     getAllSubscribedUser = getAllSubscribedUser.filter(user => user.subscription);
-//     await Promise.all(getAllSubscribedUser.map(async (user) => {
-//       await sendEmail({ email: user.email , emailType: 'NEW PRODUCT', userId: user._id, product });
-//     }));
-//     await product.save();
-//     res.status(201).json(product);
-//   } catch (error) {
-//     res.status(400).json({ error: 'Failed to create product' });
-//   }
-// });
-
-// app.put('/api/admin/products/:id', verifyAdmin, upload.array('images', 4), async (req, res) => {
-//   try {
-//     const { default: Product } = await import('./models/Product.js');
-//     let product = await Product.findById(req.params.id);
-//     if (!product) return res.status(404).json({ error: 'Product not found' });
-//     const newImageUrls = Array.isArray(req.body.images)
-//       ? req.body.images
-//       : req.body.images ? [req.body.images] : [];
-//     const removedImages = product.images.filter(url => !newImageUrls.includes(url));
-
-//     for (const url of removedImages) {
-//       try {
-//         const parts = url.split('/');
-//         const uploadIndex = parts.indexOf('upload');
-//         const folderAndFile = parts.slice(uploadIndex + 1).join('/');
-//         const publicIdWithExtension = folderAndFile.split('/').slice(1).join('/');
-//         const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
-//         await deleteFromCloudinary(publicId);
-//       } catch (err) {
-//         res.status(400).json({ error: 'Failed to update product' });
-//       }
-//     }
-
-//     let uploadedUrls = [];
-//     if (req.files && req.files.length) {
-//       uploadedUrls = await Promise.all(
-//         req.files.map(async (f) => {
-//           const buffer = f.buffer;
-//           return await uploadToCloudinary(buffer, 'products');
-//         })
-//       );
-//     }
-
-//     product.images = [
-//       ...newImageUrls,
-//       ...uploadedUrls.filter(Boolean),
-//     ];
-
-//     product.name = req.body.name || product.name;
-//     product.description = req.body.description || product.description;
-//     product.price = Number(req.body.price) || product.price;
-//     product.originalPrice = Number(req.body.originalPrice) || product.originalPrice;
-//     product.category = req.body.category || product.category;
-//     product.subcategory = req.body.subcategory || product.subcategory;
-//     product.inStock = req.body.inStock === 'true' || req.body.inStock === true;
-//     product.stockQuantity = Number(req.body.stockQuantity) || product.stockQuantity;
-//     product.featured = req.body.featured === 'true' || req.body.featured === true;
-//     product.bestSeller = req.body.bestSeller === 'true' || req.body.bestSeller === true;
-//     product.addToSliders = req.body.addToSliders === 'true' || req.body.addToSliders === true;
-//     product.addToTopCard = req.body.addToTopCard === 'true' || req.body.addToTopCard === true;
-//     product.status = req.body.status || product.status;
-
-//     product.tags = Array.isArray(req.body.tags)
-//       ? req.body.tags
-//       : typeof req.body.tags === "string" && !!req.body.tags
-//         ? JSON.parse(req.body.tags)
-//         : product.tags;
-
-//     if (req.body.deliveryInfo) {
-//       const info = typeof req.body.deliveryInfo === "string" ? JSON.parse(req.body.deliveryInfo) : req.body.deliveryInfo;
-//       product.deliveryInfo = {
-//         ...product.deliveryInfo,
-//         ...info
-//       };
-//     }
-
-//     if (req.body.specifications) {
-//       const specs = typeof req.body.specifications === "string" ? JSON.parse(req.body.specifications) : req.body.specifications;
-//       product.specifications = {
-//         ...product.specifications,
-//         ...specs
-//       };
-//     }
-
-//     await product.save();
-//     res.status(200).json(product);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({ error: 'Failed to update product' });
-//   }
-// });
 
 app.delete('/api/admin/products/:id', verifyAdmin, async (req, res) => {
   try {
