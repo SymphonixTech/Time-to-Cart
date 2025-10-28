@@ -1,268 +1,445 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 
-const AddProductModal = ({ isOpen, onClose, product, onSave }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    originalPrice: "",
-    category: "",
-    subcategory: "",
-    inStock: true,
-    stockQuantity: "",
-    sales: "",
-    tags: "",
-    estimatedDays: "",
+interface ProductForm {
+  name: string;
+  description: string;
+  price: string;
+  originalPrice: string;
+  category: string;
+  subcategory: string;
+  inStock: boolean;
+  stockQuantity: string;
+  sales: string;
+  tags: string[];
+  rating: string;
+  deliveryInfo: {
+    freeDelivery: boolean;
+    estimatedDays: string;
+    returnPolicy: string;
+  };
+  specifications: {
+    Material: string;
+    Dimensions: string;
+    Weight: string;
+    Burn_Time: string;
+    Scent: string;
+  };
+  featured: boolean;
+  bestSeller: boolean;
+  addToSliders: boolean;
+  addToTopCard: boolean;
+  status: string;
+  images: string[]; // URLs of existing images (when editing)
+}
+
+interface AddProductModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onProductSaved: () => void;
+  productToEdit?: any; // product object for edit, undefined for add
+}
+
+const CATEGORIES = [
+  "Candles",
+  "Religious Products",
+  "Kids Stationery",
+  "Gifts",
+];
+
+const SUBCATEGORY_MAP: Record<string, string[]> = {
+  Candles: [
+    "Scented Candles",
+    "Soy Wax",
+    "Decor Candles",
+    "Aromatherapy",
+    "Luxury Collection",
+    "Gift Sets",
+  ],
+  "Religious Products": [],
+  "Kids Stationery": [],
+  Gifts: [],
+};
+
+const STATUS_OPTIONS = [
+  "new",
+  "sale",
+  "discounted",
+  "featured",
+  "bestseller",
+  "trending",
+];
+
+const INITIAL_FORM: ProductForm = {
+  name: "",
+  description: "",
+  price: "",
+  originalPrice: "",
+  category: "",
+  subcategory: "",
+  inStock: true,
+  stockQuantity: "",
+  sales: "",
+  tags: [""],
+  rating: "",
+  deliveryInfo: {
     freeDelivery: false,
+    estimatedDays: "",
     returnPolicy: "",
+  },
+  specifications: {
     Material: "",
     Dimensions: "",
     Weight: "",
     Burn_Time: "",
     Scent: "",
-    addToSliders: false,
-    bestSellers: false,
-    featured: false,
-    status: "active",
-  });
+  },
+  featured: false,
+  bestSeller: false,
+  addToSliders: false,
+  addToTopCard: false,
+  status: "new",
+  images: [], // For URLs of existing images if editing
+};
 
-  const [images, setImages] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
+const AddProductModal: React.FC<AddProductModalProps> = ({
+  isOpen,
+  onClose,
+  onProductSaved,
+  productToEdit,
+}) => {
+  const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
+  const [localImages, setLocalImages] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Populate form when editing
   useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name || "",
-        description: product.description || "",
-        price: product.price || "",
-        originalPrice: product.originalPrice || "",
-        category: product.category || "",
-        subcategory: product.subcategory || "",
-        inStock: product.inStock ?? true,
-        stockQuantity: product.stockQuantity || "",
-        sales: product.sales || "",
-        tags: product.tags?.join(", ") || "",
-        estimatedDays: product.estimatedDays || "",
-        freeDelivery: product.freeDelivery ?? false,
-        returnPolicy: product.returnPolicy || "",
-        Material: product.Material || "",
-        Dimensions: product.Dimensions || "",
-        Weight: product.Weight || "",
-        Burn_Time: product.Burn_Time || "",
-        Scent: product.Scent || "",
-        addToSliders: product.addToSliders ?? false,
-        bestSellers: product.bestSellers ?? false,
-        featured: product.featured ?? false,
-        status: product.status || "active",
+    if (productToEdit) {
+      setForm({
+        ...INITIAL_FORM,
+        ...productToEdit,
+        price: productToEdit.price?.toString() || "",
+        originalPrice: productToEdit.originalPrice?.toString() || "",
+        stockQuantity: productToEdit.stockQuantity?.toString() || "",
+        sales: productToEdit.sales?.toString() || "",
+        rating: productToEdit.rating?.toString() || "",
+        tags: productToEdit.tags && productToEdit.tags.length ? productToEdit.tags : [""],
+        deliveryInfo: {
+          freeDelivery: productToEdit.deliveryInfo?.freeDelivery ?? false,
+          estimatedDays: productToEdit.deliveryInfo?.estimatedDays?.toString() || "",
+          returnPolicy: productToEdit.deliveryInfo?.returnPolicy || "",
+        },
+        specifications: {
+          Material: productToEdit.specifications?.Material || "",
+          Dimensions: productToEdit.specifications?.Dimensions || "",
+          Weight: productToEdit.specifications?.Weight || "",
+          Burn_Time: productToEdit.specifications?.Burn_Time || "",
+          Scent: productToEdit.specifications?.Scent || "",
+        },
+        images: productToEdit.images || [],
       });
-      setExistingImages(product.images || []);
+      setLocalImages([]); // Clear local images on edit start
     } else {
-      resetForm();
+      setForm(INITIAL_FORM);
+      setLocalImages([]);
     }
-  }, [product]);
+  }, [productToEdit, isOpen]);
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      originalPrice: "",
-      category: "",
-      subcategory: "",
-      inStock: true,
-      stockQuantity: "",
-      sales: "",
-      tags: "",
-      estimatedDays: "",
-      freeDelivery: false,
-      returnPolicy: "",
-      Material: "",
-      Dimensions: "",
-      Weight: "",
-      Burn_Time: "",
-      Scent: "",
-      addToSliders: false,
-      bestSellers: false,
-      featured: false,
-      status: "active",
-    });
-    setImages([]);
-    setPreviewUrls([]);
-    setExistingImages([]);
+  if (!isOpen) return null;
+
+  // Helper: delete url-based (already uploaded) image
+  const handleRemoveExistingImage = (idx: number) => {
+    setForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== idx)
+    }));
   };
 
-  // Handle image upload preview
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setImages((prev) => [...prev, ...files]);
-
-    const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setPreviewUrls((prev) => [...prev, ...newPreviews]);
+  // Helper: delete file-based (new) image
+  const handleRemoveLocalImage = (idx: number) => {
+    setLocalImages(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleDeleteNewImage = (index: number) => {
-    const updatedImages = [...images];
-    const updatedPreviews = [...previewUrls];
-    updatedImages.splice(index, 1);
-    updatedPreviews.splice(index, 1);
-    setImages(updatedImages);
-    setPreviewUrls(updatedPreviews);
+  // Helper: local file change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const total = localImages.length + form.images.length + selectedFiles.length;
+    if (total > 4) {
+      toast.error("You can upload up to 4 images total.");
+      return;
+    }
+    setLocalImages(prev => [...prev, ...selectedFiles]);
   };
 
-  const handleDeleteExistingImage = (index: number) => {
-    const updated = existingImages.filter((_, i) => i !== index);
-    setExistingImages(updated);
+  // Tags management
+  const handleTagChange = (idx: number, value: string) => {
+    setForm(prev => ({
+      ...prev,
+      tags: prev.tags.map((tag, i) => (i === idx ? value : tag)),
+    }));
+  };
+  const addTag = () => setForm(prev => ({ ...prev, tags: [...prev.tags, ""] }));
+  const removeTag = (idx: number) => setForm(prev => ({
+    ...prev,
+    tags: prev.tags.length > 1 ? prev.tags.filter((_, i) => i !== idx) : [""],
+  }));
+
+  // Nested field handlers:
+  const handleDeliveryChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      deliveryInfo: {
+        ...prev.deliveryInfo,
+        [name]: type === "checkbox" ? checked : value,
+      }
+    }));
   };
 
+  const handleSpecChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      specifications: {
+        ...prev.specifications,
+        [name]: value,
+      }
+    }));
+  };
+
+  // General field handler for non-nested fields:
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    setForm(prev => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUploading(true);
-
+    setLoading(true);
     try {
-      const uploadFormData = new FormData();
-      Object.keys(formData).forEach((key) => {
-        uploadFormData.append(key, formData[key as keyof typeof formData]);
-      });
-      uploadFormData.append("tags", formData.tags.split(",").map((tag) => tag.trim()));
+      const data = new FormData();
+      // Flat fields
+      data.append("name", form.name);
+      data.append("description", form.description);
+      data.append("price", form.price);
+      data.append("originalPrice", form.originalPrice);
+      data.append("category", form.category);
+      data.append("subcategory", form.subcategory);
+      data.append("inStock", String(form.inStock));
+      data.append("stockQuantity", form.stockQuantity);
+      data.append("sales", form.sales);
+      data.append("featured", String(form.featured));
+      data.append("bestSeller", String(form.bestSeller));
+      data.append("addToSliders", String(form.addToSliders));
+      data.append("addToTopCard", String(form.addToTopCard));
+      data.append("status", form.status);
+      data.append("rating", form.rating);
+      // Images: always send current URLs; backend should keep as is unless changed
+      form.images.forEach(url => data.append("images", url));
+      // Images: also send any new files
+      localImages.forEach(file => data.append("images", file));
+      // Tags
+      form.tags.forEach(tag => data.append("tags", tag));
+      // Delivery info and specs as JSON
+      data.append("deliveryInfo", JSON.stringify(form.deliveryInfo));
+      data.append("specifications", JSON.stringify(form.specifications));
 
-      images.forEach((file) => {
-        uploadFormData.append("images", file);
-      });
-
-      uploadFormData.append("existingImages", JSON.stringify(existingImages));
-
-      let response;
-      if (product) {
-        // Edit product
-        response = await axios.put(`/api/products/${product._id}`, uploadFormData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+      // Request
+      if (productToEdit) {
+        await axios.put(
+          `${import.meta.env.VITE_API_URL}/admin/products/${productToEdit._id}`,
+          data,
+          { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
+        );
+        toast.success("Product updated successfully!");
       } else {
-        // Add product
-        response = await axios.post("/api/products", uploadFormData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/admin/products`,
+          data,
+          { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
+        );
+        toast.success("Product added successfully!");
       }
-
-      onSave(response.data);
+      onProductSaved();
       onClose();
-      resetForm();
+      setForm(INITIAL_FORM);
+      setLocalImages([]);
     } catch (err) {
-      console.error("Error saving product:", err);
+      console.error(err);
+      toast.error("Error while saving product!");
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
-
+  // Render
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl overflow-y-auto max-h-[90vh]">
-        <h2 className="text-2xl font-semibold mb-4">
-          {product ? "Edit Product" : "Add Product"}
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center overflow-y-auto">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl p-8 my-8 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+        >
+          <XMarkIcon className="w-6 h-6" />
+        </button>
+        <h2 className="text-2xl font-bold mb-6 text-gray-900">
+          {productToEdit ? "Edit Product" : "Add Product"}
         </h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} className="w-full border rounded p-2" />
-          <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full border rounded p-2" />
-
-          <div className="grid grid-cols-2 gap-4">
-            <input type="number" name="price" placeholder="Price" value={formData.price} onChange={handleChange} className="border rounded p-2" />
-            <input type="number" name="originalPrice" placeholder="Original Price" value={formData.originalPrice} onChange={handleChange} className="border rounded p-2" />
+          {/* Basic */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input name="name" value={form.name}
+              onChange={handleChange} placeholder="Product Name" className="input" required />
+            <input name="price" value={form.price}
+              onChange={handleChange} placeholder="Price" className="input" required type="number" min="0" />
+            <input name="originalPrice" value={form.originalPrice}
+              onChange={handleChange} placeholder="Original Price" className="input" type="number" min="0" />
+            <select name="category" value={form.category}
+              onChange={handleChange} className="input" required>
+              <option value="">Select Category</option>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select name="subcategory" value={form.subcategory}
+              onChange={handleChange} className="input"
+              disabled={!SUBCATEGORY_MAP[form.category]?.length}>
+              <option value="">Select Subcategory</option>
+              {SUBCATEGORY_MAP[form.category]?.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+            <select name="status" value={form.status} onChange={handleChange} className="input">
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
+          <textarea name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Description"
+            className="input h-24"
+            required />
 
-          <div className="grid grid-cols-2 gap-4">
-            <input type="text" name="category" placeholder="Category" value={formData.category} onChange={handleChange} className="border rounded p-2" />
-            <input type="text" name="subcategory" placeholder="Subcategory" value={formData.subcategory} onChange={handleChange} className="border rounded p-2" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <input type="number" name="stockQuantity" placeholder="Stock Quantity" value={formData.stockQuantity} onChange={handleChange} className="border rounded p-2" />
-            <input type="text" name="sales" placeholder="Sales" value={formData.sales} onChange={handleChange} className="border rounded p-2" />
-          </div>
-
-          <input type="text" name="tags" placeholder="Tags (comma separated)" value={formData.tags} onChange={handleChange} className="w-full border rounded p-2" />
-
-          <div className="grid grid-cols-2 gap-4">
-            <input type="text" name="estimatedDays" placeholder="Estimated Days" value={formData.estimatedDays} onChange={handleChange} className="border rounded p-2" />
-            <input type="text" name="returnPolicy" placeholder="Return Policy" value={formData.returnPolicy} onChange={handleChange} className="border rounded p-2" />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <input type="text" name="Material" placeholder="Material" value={formData.Material} onChange={handleChange} className="border rounded p-2" />
-            <input type="text" name="Dimensions" placeholder="Dimensions" value={formData.Dimensions} onChange={handleChange} className="border rounded p-2" />
-            <input type="text" name="Weight" placeholder="Weight" value={formData.Weight} onChange={handleChange} className="border rounded p-2" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <input type="text" name="Burn_Time" placeholder="Burn Time" value={formData.Burn_Time} onChange={handleChange} className="border rounded p-2" />
-            <input type="text" name="Scent" placeholder="Scent" value={formData.Scent} onChange={handleChange} className="border rounded p-2" />
-          </div>
-
-          <div className="flex gap-4 flex-wrap">
-            {["addToSliders", "bestSellers", "featured", "freeDelivery"].map((key) => (
-              <label key={key} className="flex items-center gap-2">
-                <input type="checkbox" name={key} checked={formData[key]} onChange={handleChange} />
-                {key}
+          {/* Boolean Switches */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="freeDelivery"
+                checked={form.deliveryInfo.freeDelivery}
+                onChange={handleDeliveryChange} />
+              Free Delivery
+            </label>
+            {["inStock", "addToSliders", "addToTopCard", "bestSeller", "featured"].map((field) => (
+              <label key={field} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name={field}
+                  checked={(form as any)[field]} onChange={handleChange} />
+                {field}
               </label>
             ))}
-
-            <label className="flex items-center gap-2">
-              Status:
-              <select name="status" value={formData.status} onChange={handleChange} className="border rounded p-1">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </label>
           </div>
 
-          {/* Image Upload Section */}
+          {/* Inventory */}
+          <div className="grid grid-cols-2 gap-4">
+            <input type="number" name="stockQuantity" placeholder="Stock Quantity" value={form.stockQuantity}
+              onChange={handleChange} className="input" min="0" />
+            <input type="number" name="sales" placeholder="Sales" value={form.sales}
+              onChange={handleChange} className="input" min="0" />
+          </div>
+
+          {/* Rating */}
+          <input type="number" name="rating" placeholder="Rating" value={form.rating}
+            onChange={handleChange} className="input" min="0" max="5" step="0.1" />
+
+          {/* Delivery Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <input type="number" name="estimatedDays" placeholder="Estimated Delivery Days"
+              value={form.deliveryInfo.estimatedDays}
+              onChange={handleDeliveryChange} className="input" min="1" />
+            <input name="returnPolicy" placeholder="Return Policy"
+              value={form.deliveryInfo.returnPolicy}
+              onChange={handleDeliveryChange} className="input" />
+          </div>
+
+          {/* Specifications */}
+          <div className="grid grid-cols-3 gap-3">
+            {["Material", "Dimensions", "Weight", "Burn_Time", "Scent"].map(field => (
+              <input key={field} name={field}
+                value={(form.specifications as any)[field]}
+                onChange={handleSpecChange} placeholder={field}
+                className="input" />
+            ))}
+          </div>
+
+          {/* Images (Uploaded & New) */}
           <div>
-            <label className="block mb-2 font-semibold">Product Images</label>
-            <input type="file" multiple onChange={handleImageChange} />
-            <div className="flex flex-wrap gap-3 mt-3">
-              {existingImages.map((img, i) => (
-                <div key={i} className="relative">
-                  <img src={img} alt="product" className="w-24 h-24 object-cover rounded-lg border" />
-                  <button type="button" onClick={() => handleDeleteExistingImage(i)} className="absolute top-0 right-0 bg-red-600 text-white rounded-full px-2 py-1 text-xs">
-                    ✕
+            <label className="block text-sm font-medium text-gray-700 mb-2">Images (Max 4)</label>
+            <div className="flex flex-wrap gap-3 mb-2">
+              {/* Show existing image urls for edit */}
+              {form.images.map((img, idx) => (
+                <div key={`exist-${idx}`} className="relative group">
+                  <img src={img} alt={`Existing ${idx + 1}`} className="w-24 h-24 object-cover rounded border" />
+                  <button type="button"
+                    onClick={() => handleRemoveExistingImage(idx)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10">
+                    <XMarkIcon className="w-4 h-4" />
                   </button>
                 </div>
               ))}
-              {previewUrls.map((url, i) => (
-                <div key={i} className="relative">
-                  <img src={url} alt="preview" className="w-24 h-24 object-cover rounded-lg border" />
-                  <button type="button" onClick={() => handleDeleteNewImage(i)} className="absolute top-0 right-0 bg-red-600 text-white rounded-full px-2 py-1 text-xs">
-                    ✕
+              {/* Show local images being uploaded */}
+              {localImages.map((file, idx) => (
+                <div key={`local-${idx}`} className="relative group">
+                  <img src={URL.createObjectURL(file)} alt={`NewUpload${idx + 1}`} className="w-24 h-24 object-cover rounded border" />
+                  <button type="button"
+                    onClick={() => handleRemoveLocalImage(idx)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10">
+                    <XMarkIcon className="w-4 h-4" />
                   </button>
                 </div>
               ))}
+              {(form.images.length + localImages.length) < 4 && (
+                <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-100">
+                  <PhotoIcon className="w-8 h-8 text-gray-500 mb-1" />
+                  <span className="text-xs text-gray-500">Upload</span>
+                  <input type="file" multiple accept="image/*"
+                    onChange={handleFileChange} className="hidden" />
+                </label>
+              )}
             </div>
           </div>
 
-          <div className="flex justify-end mt-5 gap-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
-              Cancel
-            </button>
-            <button type="submit" disabled={uploading} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-              {uploading ? "Saving..." : product ? "Update Product" : "Add Product"}
-            </button>
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+            {form.tags.map((tag, idx) => (
+              <div key={idx} className="flex items-center gap-2 mb-2">
+                <input type="text" value={tag} onChange={(e) => handleTagChange(idx, e.target.value)}
+                  placeholder={`Tag ${idx + 1}`} className="input flex-1" />
+                <button type="button" onClick={() => removeTag(idx)}
+                  className="bg-red-500 text-white rounded-full px-2 py-0.5" disabled={form.tags.length === 1}>−</button>
+                {idx === (form.tags.length - 1) && (
+                  <button type="button" onClick={addTag}
+                    className="bg-green-500 text-white rounded-full px-2 py-0.5">+</button>
+                )}
+              </div>
+            ))}
           </div>
+
+          <button type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition">
+            {loading ? "Saving..." : productToEdit ? "Update Product" : "Add Product"}
+          </button>
         </form>
       </div>
     </div>
@@ -270,6 +447,7 @@ const AddProductModal = ({ isOpen, onClose, product, onSave }) => {
 };
 
 export default AddProductModal;
+
 
 
 
