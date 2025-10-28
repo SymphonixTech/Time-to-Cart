@@ -260,13 +260,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           <XMarkIcon className="w-6 h-6" />
         </button> */}
 
-        <button
+        {/* <button
           onClick={onClose}
           className="absolute top-2 right-3 text-3xl font-bold text-gray-700 hover:text-gray-900 z-10"
           aria-label="Close"
         >
           &times;
-        </button>
+        </button> */}
 
         <h2 className="text-2xl font-semibold mb-6 text-gray-900 text-center">
           {productToEdit ? "Edit Product" : "Add Product"}
@@ -556,6 +556,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           >
             {loading ? "Saving..." : productToEdit ? "Update Product" : "Add Product"}
           </button>
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+            >
+              Close
+            </button>
+          </div>
         </form>
       </div>
     </div>
