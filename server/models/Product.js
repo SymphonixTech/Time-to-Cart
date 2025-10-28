@@ -86,6 +86,10 @@ const ProductSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  addToTopCard: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
