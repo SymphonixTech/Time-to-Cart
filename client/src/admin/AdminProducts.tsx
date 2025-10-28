@@ -13,7 +13,7 @@ const AdminProducts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null); // State for editing product
+  const [editingProduct, setEditingProduct] = useState<any | null>(null); // State for editing product
 
   useEffect(() => {
     fetchProducts();
