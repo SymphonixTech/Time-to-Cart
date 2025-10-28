@@ -176,12 +176,12 @@ const AdminProducts: React.FC = () => {
         </motion.div>
 
         {/* Add Product Modal */}
-        <AddEditProductModal
+        {/* <AddEditProductModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onProductSaved={fetchProducts}
           productToEdit={editingProduct}
-        />
+        /> */}
       </div>
     </AdminLayout>
   );
