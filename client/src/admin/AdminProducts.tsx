@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { MongoService } from '../services/mongoService';
-import { Product } from '../types';
 import AdminLayout from './AdminLayout';
 import AddEditProductModal from './AddProductModal';
 import BagLoader from '../components/BagLoader';
