@@ -1114,7 +1114,7 @@ app.get('/api/products/:id/review-breakdown', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
     product.reviews.forEach((review) => {
       const r = Math.floor(review.rating);
