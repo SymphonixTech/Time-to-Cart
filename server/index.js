@@ -1105,6 +1105,43 @@ app.get('/api/reviews/:productId', async (req, res) => {
   }
 });
 
+app.get('/api/products/:id/review-breakdown', async (req, res) => {
+  try {
+    const { default: Product } = await import('./models/Product.js');
+    const product = await Product.findById(req.params.id).select('reviews');
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    product.reviews.forEach((review) => {
+      const r = Math.floor(review.rating);
+      if (r >= 1 && r <= 5) breakdown[r]++;
+    });
+
+    const totalReviews = product.reviews.length;
+    const averageRating =
+      totalReviews > 0
+        ? (
+            product.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
+            totalReviews
+          ).toFixed(1)
+        : 0;
+
+    res.status(200).json({
+      productId: product._id,
+      totalReviews,
+      averageRating: Number(averageRating),
+      breakdown,
+    });
+  } catch (error) {
+    console.error('Error fetching review breakdown:', error);
+    res.status(500).json({ error: 'Failed to fetch review breakdown' });
+  }
+});
+
 app.post('/api/reviews/:productId', verifyToken, async (req, res) => {
   try {
     const { default: Product } = await import('./models/Product.js');
