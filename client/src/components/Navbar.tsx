@@ -329,7 +329,7 @@ const Navbar: React.FC = () => {
 
                         {currentUser.role === 'admin' && (
                           <Link
-                            to="/admin/dashboard"
+                            to="/admin"
                             onClick={() => setShowProfileDropdown(false)}
                             className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                           >
@@ -466,7 +466,7 @@ const Navbar: React.FC = () => {
           <>
             {currentUser.role === 'admin' && (
               <Link
-                to="/admin/dashboard"
+                to="/admin"
                 className="block px-4 py-3 text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                 onClick={() => setIsOpen(false)}
               >
