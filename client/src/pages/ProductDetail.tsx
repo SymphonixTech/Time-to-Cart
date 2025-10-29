@@ -23,13 +23,6 @@ const formatDate = (dateString: string) => {
 }
 
 const mockProductData = {
-  ratingBreakdown: {
-    '5': 80,
-    '4': 25,
-    '3': 10,
-    '2': 3,
-    '1': 2,
-  },
   customerPhotos: [
     '/images/customer-photos/photo1.jpg',
     '/images/customer-photos/photo2.jpg',
@@ -51,7 +44,13 @@ const ProductDetail: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('description');
   const [rev, setRev] = useState("");
   const [rat, setRat] = useState(0);
-  // const [reviews, setReviews] = useState<any[]>([]);
+  const [ratingBreakdown, setRatingBreakdown] = useState({
+    '5': 0,
+    '4': 0,
+    '3': 0,
+    '2': 0,
+    '1': 0
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -60,11 +59,12 @@ const ProductDetail: React.FC = () => {
       try {
         setLoading(true);
         const foundProduct = await axios.get(`${import.meta.env.VITE_API_URL}/products/${id}`).then(res => res.data);
-        // const view = await axios.get(`${import.meta.env.VITE_API_URL}/reviews/${id}`).then(res => res.data);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/products/${id}/review-breakdown`);
+        const ratings = res.data.breakdown;
+        setRatingBreakdown(ratings);
 
         if (foundProduct) {
           setProduct(foundProduct);
-          // setReviews(view || []);
         } else {
           toast.error('Product not found');
           navigate('/products');
@@ -119,15 +119,12 @@ const ProductDetail: React.FC = () => {
 
   const handleOrderNow = () => {
     if (product && product.stockQuantity > 0) {
-      // Add to cart first
       addItems(product, quantity);
-      // Show success message
       toast.success('Product added to cart! Redirecting to checkout...', {
         duration: 2000,
         icon: '🛒',
       });
 
-      // Navigate to cart/checkout
       setTimeout(() => {
         navigate('/cart');
       }, 1500);
@@ -148,17 +145,6 @@ const ProductDetail: React.FC = () => {
       toast.success('Link copied to clipboard!');
     }
   };
-
-  // const renderStars = (rating: number, size = 'w-5 h-5') => {
-  //   return [...Array(5)].map((_, i) => (
-  //     <StarIcon
-  //       key={i}
-  //       className={`${size} ${
-  //         i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-  //       }`}
-  //     />
-  //   ));
-  // };
 
   const renderStars = (
     rating: number,
@@ -199,12 +185,8 @@ const ProductDetail: React.FC = () => {
     );
   }
 
-  // Enhanced image gallery
   const images = [
     ...product.images,
-    '/images/candles/candle-collection-1.png',
-    '/images/candles/candle-collection-2.png',
-    '/images/candles/candle-collection-3.png'
   ];
 
   return (
@@ -435,11 +417,11 @@ const ProductDetail: React.FC = () => {
             {selectedTab === 'description' && (
               <div className="prose max-w-none">
                 <p className="text-gray-600 leading-relaxed mb-4">{product.description}</p>
-                <p className="text-gray-600 leading-relaxed">
+                {/* <p className="text-gray-600 leading-relaxed">
                   Our premium candles are crafted with the finest natural soy wax and essential oils,
                   providing a clean, long-lasting burn that fills your space with delightful fragrance.
                   Each candle is hand-poured in small batches to ensure quality and consistency.
-                </p>
+                </p> */}
               </div>
             )}
 
@@ -471,8 +453,8 @@ const ProductDetail: React.FC = () => {
                   </div>
 
                   <div>
-                    {Object.entries(mockProductData.ratingBreakdown).reverse().map(([stars, count]) => {
-                      const totalMockReviews = Object.values(mockProductData.ratingBreakdown).reduce(
+                    {Object.entries(ratingBreakdown).reverse().map(([stars, count]) => {
+                      const totalMockReviews = Object.values(ratingBreakdown).reduce(
                         (sum, val) => sum + val,
                         0
                       );
