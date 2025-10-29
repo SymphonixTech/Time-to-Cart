@@ -94,14 +94,14 @@ const App: React.FC = () => {
                       path="/admin/*" 
                       element={
                         <ProtectedRoute>
-                          <AdminLayout>
-                            <Routes>
-                              <Route path="/" element={<AdminDashboard />} />
-                              <Route path="/products" element={<AdminProducts />} />
-                              <Route path="/orders" element={<AdminOrders />} />
-                              <Route path="/settings" element={<AdminSettings />} />
-                            </Routes>
-                          </AdminLayout>
+                          {/* <AdminLayout> */}
+                          <Routes>
+                            <Route path="/" element={<AdminDashboard />} />
+                            <Route path="/products" element={<AdminProducts />} />
+                            <Route path="/orders" element={<AdminOrders />} />
+                            <Route path="/settings" element={<AdminSettings />} />
+                          </Routes>
+                          {/* </AdminLayout> */}
                         </ProtectedRoute>
                       } 
                     />
