@@ -631,7 +631,7 @@ app.post('/api/admin/products', verifyAdmin, upload.array('images', 4), async (r
       'name', 'description', 'price', 'originalPrice', 'category', 'subcategory',
       'inStock', 'stockQuantity', 'featured', 'addToSliders', 'addToTopCard',
       'bestSeller', 'status','slidersMainTitle', 'slidersSubTitle', 'slidersDescription',
-      'slidersDiscount', 'slidersButtonName', 'slidersLink', 'addToTopCardLink'
+      'slidersDiscount', 'slidersButtonName', 'slidersLink'
     ];
 
     // Basic required checks
@@ -802,7 +802,7 @@ app.put('/api/admin/products/:id', verifyAdmin, upload.array('images', 4), async
       'name', 'description', 'price', 'originalPrice', 'category', 'subcategory',
       'inStock', 'stockQuantity', 'featured', 'addToSliders', 'addToTopCard',
       'bestSeller', 'status','slidersMainTitle', 'slidersSubTitle', 'slidersDescription',
-      'slidersDiscount', 'slidersButtonName', 'slidersLink', 'addToTopCardLink'
+      'slidersDiscount', 'slidersButtonName', 'slidersLink'
     ];
     const updatePayload = {};
     allowed.forEach(k => {
