@@ -417,7 +417,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             )}
           </div>
 
-          {form.addToTopCardLink && (
+          {form.addToTopCard && (
             <div className="mt-3">
               <label
                 htmlFor="addToTopCardLink"
