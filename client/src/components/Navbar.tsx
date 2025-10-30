@@ -404,7 +404,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Navigation */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
   {isOpen && (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -413,7 +413,6 @@ const Navbar: React.FC = () => {
       className="md:hidden bg-white border-t border-gray-100"
     >
       <div className="px-4 py-4 space-y-3">
-        {/* Navigation Links */}
         {navigation.map((item) => (
           <Link
             key={item.name}
@@ -437,7 +436,6 @@ const Navbar: React.FC = () => {
           My Dashboard
         </Link>
 
-        {/* Wishlist */}
         <Link
           to="/wishlist"
           className="flex items-center px-4 py-3 text-gray-600 hover:text-red-500 hover:bg-gray-50 rounded-lg transition-colors duration-200"
@@ -459,7 +457,6 @@ const Navbar: React.FC = () => {
           Wishlist ({wishlistState.items.length})
         </Link>
 
-        {/* Cart */}
         <Link
           to="/cart"
           className="flex items-center px-4 py-3 text-gray-600 hover:text-orange-500 hover:bg-gray-50 rounded-lg transition-colors duration-200"
@@ -469,7 +466,6 @@ const Navbar: React.FC = () => {
           Cart ({state.items.length})
         </Link>
 
-        {/* User Auth */}
         {currentUser ? (
           <>
             {currentUser.role === 'admin' && (
@@ -512,12 +508,117 @@ const Navbar: React.FC = () => {
       </div>
     </motion.div>
   )}
-</AnimatePresence>
+</AnimatePresence> */}
 
-
-      {/* Login Modal */}
-      {/* Login Modal */}
-      {/* Login Modal */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-t border-gray-100"
+          >
+            <div className="px-4 py-4 space-y-3">
+              {/* Navigation Links */}
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`block px-4 py-3 rounded-lg font-medium transition-colors duration-200 ${
+                    isActive(item.href)
+                      ? 'text-orange-600 bg-orange-50'
+                      : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              <Link
+                to="/user/dashboard"
+                onClick={() => setShowProfileDropdown(false)}
+                className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <UserIcon className="h-5 w-5 mr-3 text-gray-400" />
+                My Dashboard
+              </Link>
+      
+              {/* Wishlist */}
+              <Link
+                to="/wishlist"
+                className="flex items-center px-4 py-3 text-gray-600 hover:text-red-500 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
+                </svg>
+                Wishlist ({wishlistState.items.length})
+              </Link>
+      
+              {/* Cart */}
+              <Link
+                to="/cart"
+                className="flex items-center px-4 py-3 text-gray-600 hover:text-orange-500 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                <ShoppingBagIcon className="w-5 h-5 mr-3" />
+                Cart ({state.items.length})
+              </Link>
+      
+              {/* User Auth */}
+              {currentUser ? (
+                <>
+                  {currentUser.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="block px-4 py-3 text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-3 text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/user/login"
+                    className="block px-4 py-3 text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/user/register"
+                    className="block px-4 py-3 text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {showLoginModal && (
           <motion.div
