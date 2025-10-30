@@ -90,6 +90,10 @@ const ProductSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+   addToTopCardLink: {
+     type: String,
+     default: ""
+   },
   createdAt: {
     type: Date,
     default: Date.now,
