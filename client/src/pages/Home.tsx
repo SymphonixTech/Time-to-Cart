@@ -209,6 +209,7 @@ const Home: React.FC = () => {
           setFeaturedProducts(featured.length > 0 ? featured.slice(0, 4) : products.slice(0, 4));
 
           const slidingProducts = products.filter(prod => prod.addToSliders === true);
+          console.log(slidingProducts);
           setSliders(slidingProducts);
 
           const top = products.filter(prod => prod.addToTopCard === true);
