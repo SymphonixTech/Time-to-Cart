@@ -312,8 +312,15 @@ const Home: React.FC = () => {
                   onClick={() => {
                     if (category === 'Candles') {
                       navigate('/candles-subcategories');
-                    } else {
-                      navigate(`/products?category=${category.toLowerCase().replace(/ /g, '-')}`);
+                    } 
+                    else if(category === 'Religious Products') {
+                      navigate('/religious-products');
+                    }
+                    else if(category === 'Kids Stationery') {
+                      navigate('/kids');
+                    }
+                    else {
+                      navigate('/gifts');
                     }
                   }}
                 >
