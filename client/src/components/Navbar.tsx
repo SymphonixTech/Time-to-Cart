@@ -137,7 +137,7 @@ const Navbar: React.FC = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-                  Miraj
+                  T2C
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1">Candles</p>
               </div>
@@ -428,6 +428,14 @@ const Navbar: React.FC = () => {
             {item.name}
           </Link>
         ))}
+        <Link
+          to="/user/dashboard"
+          onClick={() => setShowProfileDropdown(false)}
+          className="flex items-center w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        >
+          <UserIcon className="h-5 w-5 mr-3 text-gray-400" />
+          My Dashboard
+        </Link>
 
         {/* Wishlist */}
         <Link
