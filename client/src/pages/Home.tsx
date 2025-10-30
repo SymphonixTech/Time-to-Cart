@@ -229,7 +229,7 @@ const Home: React.FC = () => {
                   </p>
         
                   <Link
-                    to={`/products/${product._id}`}
+                    to={sliders[currentSlide].slidersLink}
                     className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   >
                     {sliders[currentSlide].slidersButtonName}
