@@ -94,6 +94,12 @@ const ProductSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  slidersMainTitle: String,
+  slidersSubTitle: String,
+  slidersDescription: String,
+  slidersDiscount: String,
+  slidersButtonName: String,
+  slidersLink: String,
   status: {
     type: String,
     enum: ['new', 'sale', 'discounted', 'featured', 'bestseller', 'trending'],
