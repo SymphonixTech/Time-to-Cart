@@ -43,6 +43,8 @@ const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
   const [categories, setCategories] = useState<{}>({});
+  const [sliders, setSliders] = useState<any[]>([]);
+  const [topCards, setTopCards] = useState<any[]>([]);
 
   // Sample testimonials data
   const testimonials = [
@@ -206,6 +208,11 @@ const Home: React.FC = () => {
           const featured = products.filter(p => p.featured === true);
           setFeaturedProducts(featured.length > 0 ? featured.slice(0, 4) : products.slice(0, 4));
 
+          const slidingProducts = products.filter(prod => prod.addToSliders === true);
+          setSliders(slidingProducts);
+
+          const top = products.filter(prod => prod.addToTopCard === true);
+          setTopCards(top);
 
           const bestsellersFiltered = products.filter(p => p.bestSeller === true);
           setBestSellers(bestsellersFiltered.length > 0 ? bestsellersFiltered.slice(0, 4) : products.slice(0, 4));
@@ -227,18 +234,18 @@ const Home: React.FC = () => {
   // Auto-slide functionality
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 4000); // Changed to 4 seconds for better user experience
+      setCurrentSlide((prev) => (prev + 1) % sliders.length);
+    }, 12000); // Changed to 12 seconds for better user experience
 
     return () => clearInterval(timer);
-  }, [heroSlides.length]);
+  }, [sliders.length]);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    setCurrentSlide((prev) => (prev + 1) % sliders.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+    setCurrentSlide((prev) => (prev - 1 + sliders.length) % sliders.length);
   };
 
   const sample_categories = [
@@ -314,28 +321,7 @@ const Home: React.FC = () => {
             "
           >
             <div className="pl-3 flex space-x-4">
-              {[
-                {
-                  images: ["/images/candles/candle-collection-1.png"],
-                  name: "Vanilla Bliss Candle",
-                  price: 19.99,
-                },
-                {
-                  images: ["/images/candles/candle-collection-2.png"],
-                  name: "Citrus Glow Candle",
-                  price: 14.99,
-                },
-                {
-                  images: ["/images/candles/candle-collection-3.png"],
-                  name: "Lavender Serenity Candle",
-                  price: 17.49,
-                },
-                {
-                  images: ["/images/candles/candle-collection-4.png"],
-                  name: "Coconut Dream Candle",
-                  price: 15.99,
-                },
-              ].map((product, index) => (
+              {topCards.map((product, index) => (
                 <div
                   key={index}
                   className="flex-shrink-0 flex items-center space-x-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
@@ -371,26 +357,26 @@ const Home: React.FC = () => {
               {/* LEFT TEXT */}
               <div className="space-y-6">
                 <div className="bg-orange-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-lg shadow-lg">
-                  {heroSlides[currentSlide].discount}
+                  {sliders[currentSlide].slidersDiscount}
                 </div>
       
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-4">
-                  {heroSlides[currentSlide].mainTitle}
+                  {sliders[currentSlide].slidersMainTitle}
                   <br />
                   <span className="text-2xl lg:text-3xl text-gray-600 font-normal">
-                    {heroSlides[currentSlide].subtitle}
+                    {sliders[currentSlide].slidersSubTitle}
                   </span>
                 </h1>
       
                 <p className="text-lg text-gray-600 leading-relaxed">
-                  {heroSlides[currentSlide].description}
+                  {sliders[currentSlide].slidersDescription}
                 </p>
       
                 <Link
-                  to={heroSlides[currentSlide].link}
+                  to={sliders[currentSlide].slidersLink}
                   className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
-                  {heroSlides[currentSlide].buttonText}
+                  {sliders[currentSlide].slidersButtonName}
                   <ArrowRightIcon className="w-5 h-5 ml-2" />
                 </Link>
               </div>
@@ -416,7 +402,7 @@ const Home: React.FC = () => {
       
           {/* Dots Indicator */}
           <div className="flex justify-center mt-10 space-x-2">
-            {heroSlides.map((_, index) => (
+            {sliders.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
