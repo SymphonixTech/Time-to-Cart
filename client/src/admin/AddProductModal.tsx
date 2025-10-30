@@ -29,6 +29,7 @@ interface ProductForm {
   bestSeller: boolean;
   addToSliders: boolean;
   addToTopCard: boolean;
+  addToTopCardLink: string;
   status: string;
   images: string[];
   slidersMainTitle: string;
@@ -59,7 +60,7 @@ const SUBCATEGORY_MAP: Record<string, string[]> = {
   ],
   "Religious Products": [],
   "Kids Stationery": [],
-  Gifts: [],
+  "Gifts": [],
 };
 
 const STATUS_OPTIONS = ["new", "sale", "discounted", "featured", "bestseller", "trending"];
@@ -90,6 +91,7 @@ const INITIAL_FORM: ProductForm = {
   bestSeller: false,
   addToSliders: false,
   addToTopCard: false,
+  addToTopCardLink: "",
   status: "new",
   images: [],
   slidersMainTitle: "",
@@ -132,6 +134,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           Scent: productToEdit.specifications?.Scent || "",
         },
         images: productToEdit.images || [],
+        addToTopCardLink: productToEdit.addToTopCardLink || "",
         slidersMainTitle: productToEdit.slidersMainTitle || "",
         slidersSubTitle: productToEdit.slidersSubTitle || "",
         slidersDescription: productToEdit.slidersDescription || "",
@@ -239,6 +242,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       data.append("slidersDiscount", form.slidersDiscount);
       data.append("slidersButtonName", form.slidersButtonName);
       data.append("slidersLink", form.slidersLink);
+      data.append("addToTopCardLink", form.addToTopCardLink);
 
       form.images.forEach((url) => data.append("images", url));
       localImages.forEach((file) => data.append("images", file));
@@ -412,6 +416,25 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               )
             )}
           </div>
+
+          {form.addToTopCardLink && (
+            <div className="mt-3">
+              <label
+                htmlFor="addToTopCardLink"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Top Card Link
+              </label>
+              <input
+                type="text"
+                id="addToTopCardLink"
+                placeholder="Enter top card link"
+                value={form.addToTopCardLink}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+          )}
 
           {form.addToSliders && (
             <div className="border border-gray-300 rounded-lg p-4 mt-4 bg-gray-50">
