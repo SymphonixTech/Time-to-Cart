@@ -402,19 +402,65 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               />
               Free Delivery
             </label>
-            {["inStock", "addToSliders", "addToTopCard", "bestSeller", "featured"].map(
-              (field) => (
-                <label key={field} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    name={field}
-                    checked={(form as any)[field]}
-                    onChange={handleChange}
-                  />
-                  {field}
-                </label>
-              )
-            )}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="inStock"
+                checked={form.inStock}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, inStock: e.target.checked }))
+                }
+              />
+              In Stock
+            </label>
+          
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="addToSliders"
+                checked={form.addToSliders}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, addToSliders: e.target.checked }))
+                }
+              />
+              Add To Sliders
+            </label>
+          
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="addToTopCard"
+                checked={form.addToTopCard}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, addToTopCard: e.target.checked }))
+                }
+              />
+              Add To Top Card
+            </label>
+          
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="bestSeller"
+                checked={form.bestSeller}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, bestSeller: e.target.checked }))
+                }
+              />
+              Best Seller
+            </label>
+          
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="featured"
+                checked={form.featured}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, featured: e.target.checked }))
+                }
+              />
+              Featured
+            </label>
           </div>
 
           {form.addToTopCard && (
@@ -427,6 +473,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </label>
               <input
                 type="text"
+                name="addToTopCardLink"
                 id="addToTopCardLink"
                 placeholder="Enter top card link"
                 value={form.addToTopCardLink}
