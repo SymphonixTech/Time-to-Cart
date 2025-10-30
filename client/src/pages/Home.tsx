@@ -46,151 +46,6 @@ const Home: React.FC = () => {
   const [sliders, setSliders] = useState<any[]>([]);
   const [topCards, setTopCards] = useState<any[]>([]);
 
-  // Sample testimonials data
-  const testimonials = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      location: 'New York, NY',
-      rating: 5,
-      review: 'Absolutely love these candles! The scents are amazing and they last so long.',
-      image: '/images/miraj-logo.png'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      location: 'Los Angeles, CA',
-      rating: 5,
-      review: 'Best quality candles I have ever purchased. Highly recommend!',
-      image: '/images/miraj-logo.png'
-    },
-    {
-      id: 3,
-      name: 'Emily Davis',
-      location: 'Chicago, IL',
-      rating: 5,
-      review: 'These candles create the perfect ambiance for my home. Love them!',
-      image: '/images/miraj-logo.png'
-    },
-    {
-      id: 4,
-      name: 'James Rodriguez',
-      location: 'Miami, FL',
-      rating: 5,
-      review: 'The aromatherapy candles have transformed my meditation sessions completely.',
-      image: '/images/miraj-logo.png'
-    },
-    {
-      id: 5,
-      name: 'Lisa Thompson',
-      location: 'Seattle, WA',
-      rating: 5,
-      review: 'Perfect gift sets! My family absolutely loved the beautiful packaging and quality.',
-      image: '/images/miraj-logo.png'
-    },
-    {
-      id: 6,
-      name: 'David Park',
-      location: 'Austin, TX',
-      rating: 5,
-      review: 'Clean burning, long-lasting, and incredible fragrances. Worth every penny!',
-      image: '/images/miraj-logo.png'
-    }
-  ];
-
-  const heroSlides = [
-    {
-      id: 1,
-      mainTitle: "100% Natural",
-      subtitle: "Candles & Aromatherapy",
-      description: "Free shipping on all your orders. We deliver, you enjoy!",
-      discount: "43%",
-      buttonText: "Shop Now",
-      link: "/products",
-      mainImage: "/images/candles/candle-collection-1.png",
-      promoCards: [
-        {
-          title: "25% OFF",
-          subtitle: "Orange Zest Candles",
-          description: "Starting at $9.99",
-          image: "/images/candles/candle-collection-2.png",
-          buttonText: "Shop Now",
-          bgColor: "bg-gradient-to-br from-orange-100 to-orange-200",
-          link: "/products?category=candles&scent=citrus"
-        },
-        {
-          title: "BEST DEAL",
-          subtitle: "Coconut Soy Candles",
-          description: "Natural & Pure",
-          image: "/images/candles/candle-collection-4.png",
-          buttonText: "Shop Now",
-          bgColor: "bg-gradient-to-br from-green-700 to-green-800 text-white",
-          link: "/products?category=candles&type=soy"
-        }
-      ]
-    },
-    {
-      id: 2,
-      mainTitle: "Premium Quality",
-      subtitle: "Handcrafted Soy Candles",
-      description: "Experience the finest natural ingredients in every candle!",
-      discount: "30%",
-      buttonText: "Shop Now",
-      link: "/sale",
-      mainImage: "/images/candles/candle-collection-3.png",
-      promoCards: [
-        {
-          title: "LIMITED TIME",
-          subtitle: "Lavender Dreams",
-          description: "Starting at $12.99",
-          image: "/images/candles/candle-collection-5.png",
-          buttonText: "Shop Now",
-          bgColor: "bg-gradient-to-br from-purple-100 to-purple-200",
-          link: "/products?category=candles&scent=lavender"
-        },
-        {
-          title: "NEW ARRIVAL",
-          subtitle: "Vanilla Essence",
-          description: "Pure & Organic",
-          image: "/images/candles/candle-collection-6.jpg",
-          buttonText: "Shop Now",
-          bgColor: "bg-gradient-to-br from-yellow-600 to-yellow-700 text-white",
-          link: "/products?category=candles&scent=vanilla"
-        }
-      ]
-    },
-    {
-      id: 3,
-      mainTitle: "Trending Now",
-      subtitle: "Customer Favorites",
-      description: "Most loved aromatherapy candles trending worldwide!",
-      discount: "25%",
-      buttonText: "Shop Trending",
-      link: "/trending",
-      mainImage: "/images/candles/candle-collection-7.jpg",
-      promoCards: [
-        {
-          title: "HOT DEAL",
-          subtitle: "Rose Garden",
-          description: "Starting at $8.99",
-          image: "/images/candles/candle-collection-8.jpg",
-          buttonText: "Shop Now",
-          bgColor: "bg-gradient-to-br from-pink-100 to-rose-200",
-          link: "/products?category=candles&scent=floral"
-        },
-        {
-          title: "BESTSELLER",
-          subtitle: "Ocean Breeze",
-          description: "Fresh & Clean",
-          image: "/images/candles/candle-collection-9.jpg",
-          buttonText: "Shop Now",
-          bgColor: "bg-gradient-to-br from-blue-600 to-blue-700 text-white",
-          link: "/products?category=candles&scent=ocean"
-        }
-      ]
-    }
-  ];
-
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -206,7 +61,7 @@ const Home: React.FC = () => {
         if (products.length > 0) {
 
           const featured = products.filter(p => p.featured === true);
-          setFeaturedProducts(featured.length > 0 ? featured.slice(0, 4) : products.slice(0, 4));
+          setFeaturedProducts(featured.length > 0 ? featured.slice(0, 4) : []);
 
           const slidingProducts = products.filter(prod => prod.addToSliders === true);
           setSliders(slidingProducts);
@@ -215,7 +70,7 @@ const Home: React.FC = () => {
           setTopCards(top);
 
           const bestsellersFiltered = products.filter(p => p.bestSeller === true);
-          setBestSellers(bestsellersFiltered.length > 0 ? bestsellersFiltered.slice(0, 4) : products.slice(0, 4));
+          setBestSellers(bestsellersFiltered.length > 0 ? bestsellersFiltered.slice(0, 4) : []);
         }
       } catch (error) {
         console.error('Error loading products:', error);
@@ -331,7 +186,7 @@ const Home: React.FC = () => {
                     alt={product.name}
                     className="w-12 h-12 object-cover rounded-md border border-gray-200"
                   />
-                  <Link to="/contact" className="block">
+                  <Link to={`/products/${product._id}`} className="block">
                     <span className="text-sm font-semibold text-gray-800">
                       {product.name}
                     </span>
@@ -374,7 +229,7 @@ const Home: React.FC = () => {
                   </p>
         
                   <Link
-                    to={sliders[currentSlide].slidersLink}
+                    to={`/products/${product._id}`}
                     className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   >
                     {sliders[currentSlide].slidersButtonName}
@@ -586,24 +441,11 @@ const Home: React.FC = () => {
                 className="bg-gray-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <div className="flex items-center mb-4">
-                  <img
-                    src={testimonials[client.id - 1].image}
-                    alt={client.userId}
-                    className="w-12 h-12 rounded-full mr-4 object-cover"
-                  />
+                  <div className="w-12 h-12 rounded-full mr-4 flex items-center justify-center bg-green-600 text-white text-lg font-semibold">
+                    {client.userId.name.charAt(0).toUpperCase()}
+                  </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">{client.userId.name}</h4>
-                    <p className="text-sm text-gray-600">{client.userId.address
-                      ? [
-                          client.userId.address.street,
-                          client.userId.address.city,
-                          client.userId.address.state,
-                          client.userId.address.country
-                        ]
-                          .filter(Boolean)
-                          .join(', ')
-                      : testimonials[client.id - 1].location
-                    }</p>
                   </div>
                 </div>
 
@@ -625,8 +467,6 @@ const Home: React.FC = () => {
       <div>
         <img src="/images/about-us.jpg" alt="About Us" className="w-full h-64 object-cover" />
       </div>
-
-
     </div>
   );
 };
