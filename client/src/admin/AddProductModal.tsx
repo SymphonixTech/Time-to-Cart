@@ -31,6 +31,12 @@ interface ProductForm {
   addToTopCard: boolean;
   status: string;
   images: string[];
+  slidersMainTitle: string;
+  slidersSubTitle: string;
+  slidersDescription: string;
+  slidersDiscount: string;
+  slidersButtonName: string;
+  slidersLink: string;
 }
 
 interface AddProductModalProps {
@@ -86,6 +92,12 @@ const INITIAL_FORM: ProductForm = {
   addToTopCard: false,
   status: "new",
   images: [],
+  slidersMainTitle: "",
+  slidersSubTitle: "",
+  slidersDescription: "",
+  slidersDiscount: "",
+  slidersButtonName: "",
+  slidersLink: "",
 };
 
 const AddProductModal: React.FC<AddProductModalProps> = ({
@@ -120,6 +132,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           Scent: productToEdit.specifications?.Scent || "",
         },
         images: productToEdit.images || [],
+        slidersMainTitle: productToEdit.slidersMainTitle || "",
+        slidersSubTitle: productToEdit.slidersSubTitle || "",
+        slidersDescription: productToEdit.slidersDescription || "",
+        slidersDiscount: productToEdit.slidersDiscount || "",
+        slidersButtonName: productToEdit.slidersButtonName || "",
+        slidersLink: productToEdit.slidersLink || "",
       });
       setLocalImages([]);
     } else {
@@ -215,6 +233,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       data.append("addToSliders", String(form.addToSliders));
       data.append("addToTopCard", String(form.addToTopCard));
       data.append("status", form.status);
+      data.append("slidersMainTitle", form.slidersMainTitle);
+      data.append("slidersSubTitle", form.slidersSubTitle);
+      data.append("slidersDescription", form.slidersDescription);
+      data.append("slidersDiscount", form.slidersDiscount);
+      data.append("slidersButtonName", form.slidersButtonName);
+      data.append("slidersLink", form.slidersLink);
 
       form.images.forEach((url) => data.append("images", url));
       localImages.forEach((file) => data.append("images", file));
@@ -388,6 +412,79 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               )
             )}
           </div>
+
+          {form.addToSliders && (
+            <div className="border border-gray-300 rounded-lg p-4 mt-4 bg-gray-50">
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">Slider Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label>
+                  <span className="text-sm font-medium text-gray-700">Main Title</span>
+                  <input
+                    type="text"
+                    name="slidersMainTitle"
+                    value={form.slidersMainTitle}
+                    onChange={handleChange}
+                    placeholder="Enter main title"
+                    className="border border-gray-300 rounded-lg w-full p-2 mt-1"
+                  />
+                </label>
+                <label>
+                  <span className="text-sm font-medium text-gray-700">Sub Title</span>
+                  <input
+                    type="text"
+                    name="slidersSubTitle"
+                    value={form.slidersSubTitle}
+                    onChange={handleChange}
+                    placeholder="Enter sub title"
+                    className="border border-gray-300 rounded-lg w-full p-2 mt-1"
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <span className="text-sm font-medium text-gray-700">Description</span>
+                  <textarea
+                    name="slidersDescription"
+                    value={form.slidersDescription}
+                    onChange={handleChange}
+                    placeholder="Enter slider description"
+                    className="border border-gray-300 rounded-lg w-full p-2 mt-1 h-20"
+                  />
+                </label>
+                <label>
+                  <span className="text-sm font-medium text-gray-700">Discount</span>
+                  <input
+                    type="text"
+                    name="slidersDiscount"
+                    value={form.slidersDiscount}
+                    onChange={handleChange}
+                    placeholder="e.g. 20% OFF"
+                    className="border border-gray-300 rounded-lg w-full p-2 mt-1"
+                  />
+                </label>
+                <label>
+                  <span className="text-sm font-medium text-gray-700">Button Name</span>
+                  <input
+                    type="text"
+                    name="slidersButtonName"
+                    value={form.slidersButtonName}
+                    onChange={handleChange}
+                    placeholder="e.g. Shop Now"
+                    className="border border-gray-300 rounded-lg w-full p-2 mt-1"
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <span className="text-sm font-medium text-gray-700">Link</span>
+                  <input
+                    type="text"
+                    name="slidersLink"
+                    value={form.slidersLink}
+                    onChange={handleChange}
+                    placeholder="Enter link URL"
+                    className="border border-gray-300 rounded-lg w-full p-2 mt-1"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Inventory */}
           <div className="grid grid-cols-2 gap-4">
