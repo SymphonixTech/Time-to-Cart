@@ -209,7 +209,6 @@ const Home: React.FC = () => {
           setFeaturedProducts(featured.length > 0 ? featured.slice(0, 4) : products.slice(0, 4));
 
           const slidingProducts = products.filter(prod => prod.addToSliders === true);
-          console.log(slidingProducts);
           setSliders(slidingProducts);
 
           const top = products.filter(prod => prod.addToTopCard === true);
@@ -391,8 +390,8 @@ const Home: React.FC = () => {
                   className="relative flex justify-center items-center mt-10"
                 >
                   <img
-                    src={heroSlides[currentSlide].mainImage}
-                    alt={heroSlides[currentSlide].mainTitle}
+                    src={sliders[currentSlide].images[0]}
+                    alt={sliders[currentSlide].images[0]}
                     className="w-4/5 h-80 object-cover rounded-2xl shadow-lg"
                   />
                   <button className="absolute top-4 right-12 bg-white rounded-full p-2 shadow hover:shadow-md">
