@@ -630,7 +630,8 @@ app.post('/api/admin/products', verifyAdmin, upload.array('images', 4), async (r
     const allowed = [
       'name', 'description', 'price', 'originalPrice', 'category', 'subcategory',
       'inStock', 'stockQuantity', 'featured', 'addToSliders', 'addToTopCard',
-      'bestSeller', 'status'
+      'bestSeller', 'status','slidersMainTitle', 'slidersSubTitle', 'slidersDescription',
+      'slidersDiscount', 'slidersButtonName', 'slidersLink'
     ];
 
     // Basic required checks
@@ -800,7 +801,8 @@ app.put('/api/admin/products/:id', verifyAdmin, upload.array('images', 4), async
     const allowed = [
       'name', 'description', 'price', 'originalPrice', 'category', 'subcategory',
       'inStock', 'stockQuantity', 'featured', 'addToSliders', 'addToTopCard',
-      'bestSeller', 'status'
+      'bestSeller', 'status','slidersMainTitle', 'slidersSubTitle', 'slidersDescription',
+      'slidersDiscount', 'slidersButtonName', 'slidersLink'
     ];
     const updatePayload = {};
     allowed.forEach(k => {
