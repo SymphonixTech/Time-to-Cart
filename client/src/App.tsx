@@ -38,7 +38,8 @@ import GiftProducts from './pages/GiftProducts';
 // Import the new pages
 import FeaturedProducts from './pages/FeaturedProducts';
 import BestSellers from './pages/BestSellers';
-
+import Kids from './pages/Kids';
+import ReligiousProducts from './pages/ReligiousProducts';
 
 // Admin Pages
 import AdminLogin from './admin/AdminLogin';
@@ -87,6 +88,8 @@ const App: React.FC = () => {
                     <Route path="/user/login" element={<UserLogin />} />
                     <Route path="/user/register" element={<UserRegister />} />
                     <Route path="/user/dashboard" element={<UserDashboard />} />
+                    <Route path="/kids" element={<Kids />} />
+                    <Route path="/Religious-Products" element={<ReligiousProducts />} />
 
                     {/* Admin Routes */}
                     <Route path="/admin/login" element={<AdminLogin />} />
