@@ -345,77 +345,84 @@ const Home: React.FC = () => {
         </div>
       
         {/* ✅ Hero container (spaced better + soft background) */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center mt-12">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSlide}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-              className="grid lg:grid-cols-2 gap-8 items-center mt-10"
-            >
-              {/* LEFT TEXT */}
-              <div className="space-y-6">
-                <div className="bg-orange-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-lg shadow-lg">
-                  {sliders[currentSlide].slidersDiscount}
-                </div>
-      
-                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-4">
-                  {sliders[currentSlide].slidersMainTitle}
-                  <br />
-                  <span className="text-2xl lg:text-3xl text-gray-600 font-normal">
-                    {sliders[currentSlide].slidersSubTitle}
-                  </span>
-                </h1>
-      
-                <p className="text-lg text-gray-600 leading-relaxed">
-                  {sliders[currentSlide].slidersDescription}
-                </p>
-      
-                <Link
-                  to={sliders[currentSlide].slidersLink}
-                  className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  {sliders[currentSlide].slidersButtonName}
-                  <ArrowRightIcon className="w-5 h-5 ml-2" />
-                </Link>
-              </div>
-      
-              {/* RIGHT IMAGE */}
+        {sliders.length > 0 ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center mt-12">
+            <AnimatePresence mode="wait">
               <motion.div
+                key={currentSlide}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="relative flex justify-center items-center mt-10"
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ duration: 0.6, ease: 'easeInOut' }}
+                className="grid lg:grid-cols-2 gap-8 items-center mt-10"
               >
-                <img
-                  src={heroSlides[currentSlide].mainImage}
-                  alt={heroSlides[currentSlide].mainTitle}
-                  className="w-4/5 h-80 object-cover rounded-2xl shadow-lg"
-                />
-                <button className="absolute top-4 right-12 bg-white rounded-full p-2 shadow hover:shadow-md">
-                  <HeartIcon className="w-6 h-6 text-gray-700" />
-                </button>
+                {/* LEFT TEXT */}
+                <div className="space-y-6">
+                  <div className="bg-orange-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-lg shadow-lg">
+                    {sliders[currentSlide].slidersDiscount}
+                  </div>
+        
+                  <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-4">
+                    {sliders[currentSlide].slidersMainTitle}
+                    <br />
+                    <span className="text-2xl lg:text-3xl text-gray-600 font-normal">
+                      {sliders[currentSlide].slidersSubTitle}
+                    </span>
+                  </h1>
+        
+                  <p className="text-lg text-gray-600 leading-relaxed">
+                    {sliders[currentSlide].slidersDescription}
+                  </p>
+        
+                  <Link
+                    to={sliders[currentSlide].slidersLink}
+                    className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  >
+                    {sliders[currentSlide].slidersButtonName}
+                    <ArrowRightIcon className="w-5 h-5 ml-2" />
+                  </Link>
+                </div>
+        
+                {/* RIGHT IMAGE */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative flex justify-center items-center mt-10"
+                >
+                  <img
+                    src={heroSlides[currentSlide].mainImage}
+                    alt={heroSlides[currentSlide].mainTitle}
+                    className="w-4/5 h-80 object-cover rounded-2xl shadow-lg"
+                  />
+                  <button className="absolute top-4 right-12 bg-white rounded-full p-2 shadow hover:shadow-md">
+                    <HeartIcon className="w-6 h-6 text-gray-700" />
+                  </button>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          </AnimatePresence>
-      
-          {/* Dots Indicator */}
-          <div className="flex justify-center mt-10 space-x-2">
-            {sliders.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 transition-all duration-300 ${
-                  currentSlide === index
-                    ? 'bg-green-600 rounded-sm'
-                    : 'bg-gray-300 hover:bg-gray-400 rounded-sm'
-                }`}
-              />
-            ))}
+            </AnimatePresence>
+        
+            {/* Dots Indicator */}
+            <div className="flex justify-center mt-10 space-x-2">
+              {sliders.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-3 h-3 transition-all duration-300 ${
+                    currentSlide === index
+                      ? 'bg-green-600 rounded-sm'
+                      : 'bg-gray-300 hover:bg-gray-400 rounded-sm'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          // 🌀 Loader until sliders load
+          <div className="flex justify-center items-center h-96">
+            <BagLoader size="large" text="Loading slider content..." />
+          </div>
+        )}
       </section>
 
       {/* Choose Your Category Section */}
