@@ -55,7 +55,6 @@ const AdminProducts: React.FC = () => {
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
-
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/products/search?q=${encodeURIComponent(term)}`);
       setFilteredProducts(res.data);

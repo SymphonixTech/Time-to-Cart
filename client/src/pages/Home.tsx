@@ -194,7 +194,6 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
-
         {/* ✅ Hero container (spaced better + soft background) */}
         {sliders.length > 0 ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center mt-12">
@@ -223,7 +222,6 @@ const Home: React.FC = () => {
                       {sliders[currentSlide].slidersSubTitle}
                     </span>
                   </h1>
-
                   <p className="text-lg text-gray-600 leading-relaxed">
                     {sliders[currentSlide].slidersDescription}
                   </p>
@@ -236,7 +234,6 @@ const Home: React.FC = () => {
                     <ArrowRightIcon className="w-5 h-5 ml-2" />
                   </Link>
                 </div>
-
                 {/* RIGHT IMAGE */}
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
@@ -255,7 +252,6 @@ const Home: React.FC = () => {
                 </motion.div>
               </motion.div>
             </AnimatePresence>
-
             {/* Dots Indicator */}
             <div className="flex justify-center mt-10 space-x-2">
               {sliders.map((_, index) => (

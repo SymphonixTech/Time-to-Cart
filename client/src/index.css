@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,7 +6,6 @@
   html {
     scroll-behavior: smooth;
   }
-
   body {
     @apply font-sans antialiased;
   }

@@ -69,8 +69,11 @@ export interface Product {
   tags: string[];
   featured: boolean;
   bestSeller: boolean;
+<<<<<<< HEAD
   addToSliders: boolean;
   addToTopCard: boolean;
+=======
+>>>>>>> 1f1c9d92ebf88d28d0b43901aad2874aaee283e1
 }
 
 export interface CartState {

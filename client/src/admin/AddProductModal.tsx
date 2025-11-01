@@ -110,40 +110,36 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const [localImages, setLocalImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [dragCounter, setDragCounter] = useState(0);
 
   useEffect(() => {
-    if (productToEdit) {
-      setForm({
-        ...INITIAL_FORM,
-        ...productToEdit,
-        price: productToEdit.price?.toString() || "",
-        originalPrice: productToEdit.originalPrice?.toString() || "",
-        stockQuantity: productToEdit.stockQuantity?.toString() || "",
-        tags: productToEdit.tags && productToEdit.tags.length ? productToEdit.tags : [""],
-        deliveryInfo: {
-          freeDelivery: productToEdit.deliveryInfo?.freeDelivery ?? false,
-          estimatedDays: productToEdit.deliveryInfo?.estimatedDays?.toString() || "",
-          returnPolicy: productToEdit.deliveryInfo?.returnPolicy || "",
-        },
-        specifications: {
-          Material: productToEdit.specifications?.Material || "",
-          Dimensions: productToEdit.specifications?.Dimensions || "",
-          Weight: productToEdit.specifications?.Weight || "",
-          Burn_Time: productToEdit.specifications?.Burn_Time || "",
-          Scent: productToEdit.specifications?.Scent || "",
-        },
-        images: productToEdit.images || [],
-        slidersMainTitle: productToEdit.slidersMainTitle || "",
-        slidersSubTitle: productToEdit.slidersSubTitle || "",
-        slidersDescription: productToEdit.slidersDescription || "",
-        slidersDiscount: productToEdit.slidersDiscount || "",
-        slidersButtonName: productToEdit.slidersButtonName || "",
-        slidersLink: productToEdit.slidersLink || "",
-      });
-      setLocalImages([]);
-    } else {
-      setForm(INITIAL_FORM);
-      setLocalImages([]);
+    if (isOpen) {
+      if (productToEdit) {
+        setForm({
+          ...INITIAL_FORM,
+          ...productToEdit,
+          price: productToEdit.price?.toString() || "",
+          originalPrice: productToEdit.originalPrice?.toString() || "",
+          stockQuantity: productToEdit.stockQuantity?.toString() || "",
+          tags: productToEdit.tags && productToEdit.tags.length ? productToEdit.tags : [""],
+          deliveryInfo: {
+            freeDelivery: productToEdit.deliveryInfo?.freeDelivery ?? false,
+            estimatedDays: productToEdit.deliveryInfo?.estimatedDays?.toString() || "",
+            returnPolicy: productToEdit.deliveryInfo?.returnPolicy || "",
+          },
+          specifications: {
+            Material: productToEdit.specifications?.Material || "",
+            Dimensions: productToEdit.specifications?.Dimensions || "",
+            Weight: productToEdit.specifications?.Weight || "",
+            Burn_Time: productToEdit.specifications?.Burn_Time || "",
+            Scent: productToEdit.specifications?.Scent || "",
+          },
+          images: productToEdit.images || [],
+        });
+      } else {
+        setForm(INITIAL_FORM);
+        setLocalImages([]);
+      }
     }
   }, [productToEdit, isOpen]);
 
@@ -160,40 +156,40 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     setLocalImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
-    const handleFileUpload = (files: FileList | null) => {
-      if (!files) return;
-      const selectedFiles = Array.from(files);
-      const total = localImages.length + form.images.length + selectedFiles.length;
-      if (total > 4) {
-        toast.error("You can upload up to 4 images total.");
-        return;
-      }
-      setLocalImages((prev) => [...prev, ...selectedFiles]);
-    };
-
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const selectedFiles = Array.from(e.target.files || []);
-  //   const total = localImages.length + form.images.length + selectedFiles.length;
-  //   if (total > 4) {
-  //     toast.error("You can upload up to 4 images total.");
-  //     return;
-  //   }
-  //   setLocalImages((prev) => [...prev, ...selectedFiles]);
-  // };
+  const handleFileUpload = (files: FileList | null) => {
+    if (!files) return;
+    const selectedFiles = Array.from(files);
+    const total = localImages.length + form.images.length + selectedFiles.length;
+    if (total > 4) {
+      toast.error("You can upload up to 4 images total.");
+      return;
+    }
+    setLocalImages((prev) => [...prev, ...selectedFiles]);
+  };
 
   const handleDragOver = (e: DragEvent<HTMLFormElement>) => {
     e.preventDefault();
+  };
+
+  const handleDragEnter = (e: DragEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setDragCounter((prev) => prev + 1);
     setDragging(true);
   };
 
   const handleDragLeave = (e: DragEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setDragging(false);
+    setDragCounter((prev) => {
+      const newCount = prev - 1;
+      if (newCount <= 0) setDragging(false);
+      return newCount;
+    });
   };
 
   const handleDrop = (e: DragEvent<HTMLFormElement>) => {
     e.preventDefault();
     setDragging(false);
+    setDragCounter(0);
     handleFileUpload(e.dataTransfer.files);
   };
 
@@ -309,9 +305,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         <h2 className="text-2xl font-semibold mb-6 text-gray-900 text-center">
           {productToEdit ? "Edit Product" : "Add Product"}
         </h2>
-
         <form
           onSubmit={handleSubmit}
+          onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -443,7 +439,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               />
               In Stock
             </label>
-
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -455,7 +450,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               />
               Add To Sliders
             </label>
-
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -467,7 +461,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               />
               Add To Top Card
             </label>
-
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -479,7 +472,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               />
               Best Seller
             </label>
-
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -631,60 +623,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
           )}
 
-          {/* Images */}
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Images (Max 4)
-            </label>
-            <div className="flex flex-wrap gap-3 mb-2">
-              {form.images.map((img, idx) => (
-                <div key={`exist-${idx}`} className="relative group">
-                  <img
-                    src={img}
-                    alt={`Existing ${idx + 1}`}
-                    className="w-24 h-24 object-cover rounded border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveExistingImage(idx)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10"
-                  >
-                    <XMarkIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              {localImages.map((file, idx) => (
-                <div key={`local-${idx}`} className="relative group">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`NewUpload${idx + 1}`}
-                    className="w-24 h-24 object-cover rounded border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveLocalImage(idx)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10"
-                  >
-                    <XMarkIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              {(form.images.length + localImages.length) < 4 && (
-                <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-100">
-                  <PhotoIcon className="w-8 h-8 text-gray-500 mb-1" />
-                  <span className="text-xs text-gray-500">Upload</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
-          </div> */}
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Product Images (Max 4)
@@ -798,363 +736,3 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 };
 
 export default AddProductModal;
-
-
-
-
-
-
-
-// import React, { useState, useEffect, DragEvent } from "react";
-// import axios from "axios";
-// import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
-// import toast from "react-hot-toast";
-
-// interface ProductForm {
-//   name: string;
-//   description: string;
-//   price: string;
-//   originalPrice: string;
-//   category: string;
-//   subcategory: string;
-//   inStock: boolean;
-//   stockQuantity: string;
-//   tags: string[];
-//   deliveryInfo: {
-//     freeDelivery: boolean;
-//     estimatedDays: string;
-//     returnPolicy: string;
-//   };
-//   specifications: {
-//     Material: string;
-//     Dimensions: string;
-//     Weight: string;
-//     Burn_Time: string;
-//     Scent: string;
-//   };
-//   featured: boolean;
-//   bestSeller: boolean;
-//   addToSliders: boolean;
-//   addToTopCard: boolean;
-//   status: string;
-//   images: string[];
-//   slidersMainTitle: string;
-//   slidersSubTitle: string;
-//   slidersDescription: string;
-//   slidersDiscount: string;
-//   slidersButtonName: string;
-//   slidersLink: string;
-// }
-
-// interface AddProductModalProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   onProductAdded?: any;
-//   productToEdit?: any;
-// }
-
-// const CATEGORIES = ["Candles", "Religious Products", "Kids Stationery", "Gifts"];
-
-// const SUBCATEGORY_MAP: Record<string, string[]> = {
-//   Candles: [
-//     "Scented Candles",
-//     "Soy Wax",
-//     "Decor Candles",
-//     "Aromatherapy",
-//     "Luxury Collection",
-//     "Gift Sets",
-//   ],
-//   "Religious Products": [],
-//   "Kids Stationery": [],
-//   "Gifts": [],
-// };
-
-// const STATUS_OPTIONS = ["new", "sale", "discounted", "featured", "bestseller", "trending"];
-
-// const INITIAL_FORM: ProductForm = {
-//   name: "",
-//   description: "",
-//   price: "",
-//   originalPrice: "",
-//   category: "",
-//   subcategory: "",
-//   inStock: true,
-//   stockQuantity: "",
-//   tags: [""],
-//   deliveryInfo: {
-//     freeDelivery: false,
-//     estimatedDays: "",
-//     returnPolicy: "",
-//   },
-//   specifications: {
-//     Material: "",
-//     Dimensions: "",
-//     Weight: "",
-//     Burn_Time: "",
-//     Scent: "",
-//   },
-//   featured: false,
-//   bestSeller: false,
-//   addToSliders: false,
-//   addToTopCard: false,
-//   status: "new",
-//   images: [],
-//   slidersMainTitle: "",
-//   slidersSubTitle: "",
-//   slidersDescription: "",
-//   slidersDiscount: "",
-//   slidersButtonName: "",
-//   slidersLink: "",
-// };
-
-// const AddProductModal: React.FC<AddProductModalProps> = ({
-//   isOpen,
-//   onClose,
-//   onProductAdded,
-//   productToEdit,
-// }) => {
-//   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
-//   const [localImages, setLocalImages] = useState<File[]>([]);
-//   const [loading, setLoading] = useState(false);
-//   const [dragging, setDragging] = useState(false);
-
-//   useEffect(() => {
-//     if (productToEdit) {
-//       setForm({
-//         ...INITIAL_FORM,
-//         ...productToEdit,
-//         price: productToEdit.price?.toString() || "",
-//         originalPrice: productToEdit.originalPrice?.toString() || "",
-//         stockQuantity: productToEdit.stockQuantity?.toString() || "",
-//         tags: productToEdit.tags && productToEdit.tags.length ? productToEdit.tags : [""],
-//         deliveryInfo: {
-//           freeDelivery: productToEdit.deliveryInfo?.freeDelivery ?? false,
-//           estimatedDays: productToEdit.deliveryInfo?.estimatedDays?.toString() || "",
-//           returnPolicy: productToEdit.deliveryInfo?.returnPolicy || "",
-//         },
-//         specifications: {
-//           Material: productToEdit.specifications?.Material || "",
-//           Dimensions: productToEdit.specifications?.Dimensions || "",
-//           Weight: productToEdit.specifications?.Weight || "",
-//           Burn_Time: productToEdit.specifications?.Burn_Time || "",
-//           Scent: productToEdit.specifications?.Scent || "",
-//         },
-//         images: productToEdit.images || [],
-//       });
-//       setLocalImages([]);
-//     } else {
-//       setForm(INITIAL_FORM);
-//       setLocalImages([]);
-//     }
-//   }, [productToEdit, isOpen]);
-
-//   if (!isOpen) return null;
-
-//   const handleFileUpload = (files: FileList | null) => {
-//     if (!files) return;
-//     const selectedFiles = Array.from(files);
-//     const total = localImages.length + form.images.length + selectedFiles.length;
-//     if (total > 4) {
-//       toast.error("You can upload up to 4 images total.");
-//       return;
-//     }
-//     setLocalImages((prev) => [...prev, ...selectedFiles]);
-//   };
-
-//   // --- Drag and Drop Handlers ---
-//   const handleDragOver = (e: DragEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-//     setDragging(true);
-//   };
-
-//   const handleDragLeave = (e: DragEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-//     setDragging(false);
-//   };
-
-//   const handleDrop = (e: DragEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-//     setDragging(false);
-//     handleFileUpload(e.dataTransfer.files);
-//   };
-
-//   const handleRemoveExistingImage = (idx: number) => {
-//     setForm((prev) => ({
-//       ...prev,
-//       images: prev.images.filter((_, i) => i !== idx),
-//     }));
-//   };
-
-//   const handleRemoveLocalImage = (idx: number) => {
-//     setLocalImages((prev) => prev.filter((_, i) => i !== idx));
-//   };
-
-//   const handleTagChange = (idx: number, value: string) => {
-//     setForm((prev) => ({
-//       ...prev,
-//       tags: prev.tags.map((tag, i) => (i === idx ? value : tag)),
-//     }));
-//   };
-
-//   const addTag = () => setForm((prev) => ({ ...prev, tags: [...prev.tags, ""] }));
-//   const removeTag = (idx: number) =>
-//     setForm((prev) => ({
-//       ...prev,
-//       tags: prev.tags.length > 1 ? prev.tags.filter((_, i) => i !== idx) : [""],
-//     }));
-
-//   const handleChange = (
-//     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-//   ) => {
-//     const { name, value, type, checked } = e.target as HTMLInputElement;
-//     setForm((prev) => ({
-//       ...prev,
-//       [name]: type === "checkbox" ? checked : value,
-//     }));
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     try {
-//       const data = new FormData();
-//       Object.entries(form).forEach(([key, value]) => {
-//         if (typeof value === "object" && !Array.isArray(value))
-//           data.append(key, JSON.stringify(value));
-//         else if (Array.isArray(value)) value.forEach((v) => data.append(key, v));
-//         else data.append(key, String(value));
-//       });
-//       localImages.forEach((file) => data.append("images", file));
-
-//       let res;
-//       if (productToEdit) {
-//         res = await axios.put(
-//           `${import.meta.env.VITE_API_URL}/admin/products/${productToEdit._id}`,
-//           data,
-//           { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
-//         );
-//         toast.success("Product updated!");
-//         onProductAdded((prev: any[]) =>
-//           prev.map((p) => (p._id === res.data._id ? res.data : p))
-//         );
-//       } else {
-//         res = await axios.post(`${import.meta.env.VITE_API_URL}/admin/products`, data, {
-//           headers: { "Content-Type": "multipart/form-data" },
-//           withCredentials: true,
-//         });
-//         toast.success("Product added!");
-//         onProductAdded((prev: any[]) => [...prev, res.data]);
-//       }
-//       onClose();
-//       setForm(INITIAL_FORM);
-//       setLocalImages([]);
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Error while saving product!");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center overflow-y-auto">
-//       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-lg border border-gray-200 p-8 my-8 relative overflow-y-auto max-h-[90vh]">
-//         <h2 className="text-2xl font-semibold mb-6 text-gray-900 text-center">
-//           {productToEdit ? "Edit Product" : "Add Product"}
-//         </h2>
-
-//         <form
-//           onSubmit={handleSubmit}
-//           onDragOver={handleDragOver}
-//           onDragLeave={handleDragLeave}
-//           onDrop={handleDrop}
-//           className={`space-y-5 relative ${
-//             dragging ? "border-4 border-green-400 border-dashed" : ""
-//           }`}
-//         >
-//           {dragging && (
-//             <div className="absolute inset-0 flex items-center justify-center bg-green-100 bg-opacity-75 rounded-xl z-50">
-//               <p className="text-green-700 font-medium text-lg">Drop your images here 🚀</p>
-//             </div>
-//           )}
-
-//           {/* --- form content omitted for brevity, same as before --- */}
-
-//           {/* Image Upload Section */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Product Images (Max 4)
-//             </label>
-//             <div className="flex flex-wrap gap-3 mb-2">
-//               {form.images.map((img, idx) => (
-//                 <div key={`exist-${idx}`} className="relative group">
-//                   <img
-//                     src={img}
-//                     alt={`Existing ${idx + 1}`}
-//                     className="w-24 h-24 object-cover rounded border"
-//                   />
-//                   <button
-//                     type="button"
-//                     onClick={() => handleRemoveExistingImage(idx)}
-//                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10"
-//                   >
-//                     <XMarkIcon className="w-4 h-4" />
-//                   </button>
-//                 </div>
-//               ))}
-//               {localImages.map((file, idx) => (
-//                 <div key={`local-${idx}`} className="relative group">
-//                   <img
-//                     src={URL.createObjectURL(file)}
-//                     alt={`Upload${idx + 1}`}
-//                     className="w-24 h-24 object-cover rounded border"
-//                   />
-//                   <button
-//                     type="button"
-//                     onClick={() => handleRemoveLocalImage(idx)}
-//                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 z-10"
-//                   >
-//                     <XMarkIcon className="w-4 h-4" />
-//                   </button>
-//                 </div>
-//               ))}
-//               {(form.images.length + localImages.length) < 4 && (
-//                 <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-100">
-//                   <PhotoIcon className="w-8 h-8 text-gray-500 mb-1" />
-//                   <span className="text-xs text-gray-500">Upload</span>
-//                   <input
-//                     type="file"
-//                     multiple
-//                     accept="image/*"
-//                     onChange={(e) => handleFileUpload(e.target.files)}
-//                     className="hidden"
-//                   />
-//                 </label>
-//               )}
-//             </div>
-//           </div>
-
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition"
-//           >
-//             {loading ? "Saving..." : productToEdit ? "Update Product" : "Add Product"}
-//           </button>
-
-//           <div className="flex justify-end mt-6">
-//             <button
-//               type="button"
-//               onClick={onClose}
-//               className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-//             >
-//               Close
-//             </button>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AddProductModal;

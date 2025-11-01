@@ -66,7 +66,6 @@ const AdminDashboard: React.FC = () => {
     fetchProducts();
     fetchOrders();
   }, []);
-
   useEffect(() => {
     const prodNum = products.length;
     const ordNum = orders.length;
@@ -84,12 +83,10 @@ const AdminDashboard: React.FC = () => {
     const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
     const thisYear = now.getFullYear();
     const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
     const thisMonthOrders = orders.filter(o => {
       const d = new Date(o.createdAt);
       return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
     });
-
     const lastMonthOrders = orders.filter(o => {
       const d = new Date(o.createdAt);
       return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
@@ -97,7 +94,6 @@ const AdminDashboard: React.FC = () => {
 
     const pendingOrdersThisMonth = thisMonthOrders.filter(o => o.status === 'pending').length;
     const pendingOrdersLastMonth = lastMonthOrders.filter(o => o.status === 'pending').length;
-
     const pendingChangeValue = pendingOrdersLastMonth > 0
       ? ((pendingOrdersThisMonth - pendingOrdersLastMonth) / pendingOrdersLastMonth) * 100
       : 0;

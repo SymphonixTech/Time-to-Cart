@@ -26,7 +26,6 @@ const BestSellers: React.FC = () => {
         setIsLoading(false);
       }
     };
-
     loadProducts();
   }, []);
 

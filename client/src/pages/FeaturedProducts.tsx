@@ -5,7 +5,6 @@ import { ArrowLeftIcon, StarIcon } from '@heroicons/react/24/outline';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import BagLoader from '../components/BagLoader';
-import { MongoService } from '../services/mongoService';
 import axios from 'axios';
 
 const FeaturedProducts: React.FC = () => {
@@ -28,7 +27,6 @@ const FeaturedProducts: React.FC = () => {
         setIsLoading(false);
       }
     };
-
     loadProducts();
   }, []);
 
