@@ -7,6 +7,7 @@ import {
   UsersIcon,
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
 import { Product } from '../types';
@@ -191,7 +192,10 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center mt-4">
-                <ArrowTrendingUpIcon className={`w-4 h-4 mr-1 ${stat.color}`} />
+                {stat.color === 'text-red-500' ?
+                  <ArrowTrendingDownIcon className={`w-4 h-4 mr-1 ${stat.color}`} /> :
+                  <ArrowTrendingUpIcon className={`w-4 h-4 mr-1 ${stat.color}`} />
+                }
                 <span className={`text-sm font-medium ${stat.color}`}>{stat.change}</span>
                 <span className="text-sm text-gray-500 ml-1">from last month</span>
               </div>
@@ -252,7 +256,7 @@ const AdminDashboard: React.FC = () => {
                       {order.userId?.email || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.totalAmount.toFixed(2)}
+                      ₹{order.totalAmount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
