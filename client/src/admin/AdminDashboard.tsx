@@ -48,7 +48,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders`, {withCredentials: true});
       const ords = res.data;
-      const sortedOrders = ords.sort((a: Product, b: Product) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedOrders = ords.sort((a: Product, b: Product) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       const recent = sortedOrders.slice(0, 5);
       setOrders(ords);
       setRecentOrders(recent);
